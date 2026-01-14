@@ -1,0 +1,79 @@
+{
+  "_format": "hh-sol-cache-2",
+  "files": {
+    "D:\\hackthon\\cybersecurity-copy-of-mantle-truthflow\\contracts\\contracts\\TruthArena.sol": {
+      "lastModificationDate": 1768239875395,
+      "contentHash": "c373d0ef120f6fa25cbb14579bc2f653",
+      "sourceName": "contracts/TruthArena.sol",
+      "solcConfig": {
+        "version": "0.8.20",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.20"
+      ],
+      "artifacts": [
+        "TruthArena"
+      ]
+    },
+    "D:\\hackthon\\cybersecurity-copy-of-mantle-truthflow\\contracts\\contracts\\TruthArenaV2.sol": {
+      "lastModificationDate": 1768240985305,
+      "contentHash": "1eb422adf0641a9ef5192af15e633646",
+      "sourceName": "contracts/TruthArenaV2.sol",
+      "solcConfig": {
+        "version": "0.8.20",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.20"
+      ],
+      "artifacts": [
+        "TruthArenaV2"
+      ]
+    }
+  }
+}
