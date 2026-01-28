@@ -203,12 +203,14 @@ const AddMarketPanel: React.FC<AddMarketPanelProps> = ({ onAddMarket, onClose, o
           body: JSON.stringify({
             companies: [],
             persons: [],
-            detailed_info: mdContent
+            detailed_info: mdContent || formData.description
           })
         });
 
         if (!response.ok) {
-          throw new Error('AI分析失败');
+          const errorData = await response.json().catch(() => ({}));
+          console.error('AI API Error:', errorData);
+          throw new Error(`AI分析失败: ${errorData.error || response.statusText}`);
         }
 
         const result = await response.json();
