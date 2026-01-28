@@ -201,9 +201,7 @@ const AddMarketPanel: React.FC<AddMarketPanelProps> = ({ onAddMarket, onClose, o
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            companies: [],
-            persons: [],
-            detailed_info: mdContent || formData.description
+            md_content: mdContent
           })
         });
 
