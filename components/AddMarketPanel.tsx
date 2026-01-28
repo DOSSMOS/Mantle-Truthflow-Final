@@ -195,15 +195,15 @@ const AddMarketPanel: React.FC<AddMarketPanelProps> = ({ onAddMarket, onClose, o
       // 如果是上传模式且还没有AI分析结果，现在调用AI
       if (isUploadMode && mdContent && !aiResult) {
         // 调用AI API分析MD文件
-        const response = await fetch('https://ai-production-f4f1.up.railway.app/api/analyze-from-file', {
+        const response = await fetch('https://ai-production-f4f1.up.railway.app/api/analyze', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            filename: mdFile?.name || 'document.md',
-            use_ai: true,
-            md_content: mdContent
+            companies: [],
+            persons: [],
+            detailed_info: mdContent
           })
         });
 
