@@ -18,7 +18,7 @@ const App: React.FC = () => {
   const [isLoadingMarkets, setIsLoadingMarkets] = useState(true);
   const [activeMarketId, setActiveMarketId] = useState<number | null>(null);
   const [hoveredMarketId, setHoveredMarketId] = useState<number | null>(null);
-  const [mntBalance, setMntBalance] = useState(0);
+  const [hskBalance, setHskBalance] = useState(0);
   const [userBalance, setUserBalance] = useState(5000);
   const [tickerLog, setTickerLog] = useState<string[]>([]);
   const [showAddMarket, setShowAddMarket] = useState(false);
@@ -50,13 +50,13 @@ const App: React.FC = () => {
       const balance = parseInt(balanceHex, 16) / 1e18;
       console.log('💰 Raw Balance:', balance);
       
-      if (chainIdDecimal === 5003) {
+      if (chainIdDecimal === 133) {
         const formattedBalance = parseFloat(balance.toFixed(4));
-        setMntBalance(formattedBalance);
+        setHskBalance(formattedBalance);
         setUserBalance(Math.floor(balance));
-        console.log('✅ MNT Balance set:', formattedBalance);
+        console.log('✅ HSK Balance set:', formattedBalance);
       } else {
-        console.log('⚠️ Not on Mantle Sepolia (5003), current chain:', chainIdDecimal);
+        console.log('⚠️ Not on HashKey Chain Testnet (133), current chain:', chainIdDecimal);
       }
     } catch (error) {
       console.error('Failed to refresh balance:', error);
@@ -92,14 +92,14 @@ const App: React.FC = () => {
         console.log('🔍 Connect Wallet - ChainId:', chainId, 'Decimal:', chainIdDecimal);
         console.log('💰 Balance:', balance);
         
-        if (chainIdDecimal === 5003) {
+        if (chainIdDecimal === 133) {
           const formattedBalance = parseFloat(balance.toFixed(4));
-          setMntBalance(formattedBalance);
+          setHskBalance(formattedBalance);
           setUserBalance(Math.floor(balance));
-          console.log('✅ Set MNT Balance:', formattedBalance);
+          console.log('✅ Set HSK Balance:', formattedBalance);
           addToTicker(`[SYSTEM] Wallet connected: ${address.slice(0, 6)}...${address.slice(-4)}`);
-          addToTicker(`[SYSTEM] Balance: ${formattedBalance.toFixed(4)} MNT`);
-          addToTicker(`[SYSTEM] Network: Mantle Sepolia (Chain ID: 5003)`);
+          addToTicker(`[SYSTEM] Balance: ${formattedBalance.toFixed(4)} HSK`);
+          addToTicker(`[SYSTEM] Network: HashKey Chain Testnet (Chain ID: 133)`);
           
           // 从链上同步市场数据
           addToTicker(`[SYSTEM] Syncing markets from blockchain...`);
@@ -122,20 +122,20 @@ const App: React.FC = () => {
             addToTicker(`[WARNING] Could not sync from chain: ${error.message}`);
           }
         } else {
-          console.log('⚠️ Wrong network. Expected: 5003, Got:', chainIdDecimal);
+          console.log('⚠️ Wrong network. Expected: 133, Got:', chainIdDecimal);
           addToTicker(`[SYSTEM] Wallet connected: ${address.slice(0, 6)}...${address.slice(-4)}`);
           addToTicker(`[WARNING] Wrong network detected (Chain ID: ${chainIdDecimal})`);
-          addToTicker(`[SYSTEM] Switching to Mantle Sepolia...`);
+          addToTicker(`[SYSTEM] Switching to HashKey Chain Testnet...`);
           
-          // 自动切换到 Mantle Sepolia
+          // 自动切换到 HashKey Chain Testnet
           try {
             await window.ethereum.request({
               method: 'wallet_switchEthereumChain',
-              params: [{ chainId: '0x138B' }], // 5003
+              params: [{ chainId: '0x85' }], // 133
             });
             
             // 切换成功后重新获取余额
-            addToTicker(`[SUCCESS] Switched to Mantle Sepolia`);
+            addToTicker(`[SUCCESS] Switched to HashKey Chain Testnet`);
             setTimeout(() => {
               connectWallet(); // 重新连接以更新余额
             }, 1000);
@@ -147,18 +147,18 @@ const App: React.FC = () => {
                 await window.ethereum.request({
                   method: 'wallet_addEthereumChain',
                   params: [{
-                    chainId: '0x138B',
-                    chainName: 'Mantle Sepolia',
+                    chainId: '0x85',
+                    chainName: 'HashKey Chain Testnet',
                     nativeCurrency: {
-                      name: 'MNT',
-                      symbol: 'MNT',
+                      name: 'HSK',
+                      symbol: 'HSK',
                       decimals: 18
                     },
-                    rpcUrls: ['https://rpc.sepolia.mantle.xyz'],
-                    blockExplorerUrls: ['https://explorer.sepolia.mantle.xyz']
+                    rpcUrls: ['https://testnet.hsk.xyz'],
+                    blockExplorerUrls: ['https://testnet-explorer.hsk.xyz']
                   }],
                 });
-                addToTicker(`[SUCCESS] Mantle Sepolia network added`);
+                addToTicker(`[SUCCESS] HashKey Chain Testnet network added`);
                 setTimeout(() => {
                   connectWallet(); // 重新连接
                 }, 1000);
@@ -273,7 +273,7 @@ const App: React.FC = () => {
       <div className="absolute top-0 left-0 w-full p-4 z-20 flex justify-between items-center pointer-events-none">
         <div className="flex flex-col">
           <h1 className="text-2xl font-mono font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-mantle-accent tracking-tighter flex items-center gap-2">
-            <ShieldAlert size={24} className="text-red-500"/> MANTLE CYBER-WARFARE
+            <ShieldAlert size={24} className="text-red-500"/> HASHKEY CYBER-WARFARE
           </h1>
           <p className="text-gray-500 text-[10px] font-mono tracking-[0.3em] ml-8">
             RWA AUDIT PROTOCOL // DECENTRALIZED RED TEAMING
@@ -329,13 +329,13 @@ const App: React.FC = () => {
                 <Wallet size={16} className="text-green-500"/>
                 <span className="text-gray-400">{walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}</span>
                 <span className="text-gray-600">|</span>
-                <span className="text-white font-bold">{mntBalance.toFixed(4)} MNT</span>
+                <span className="text-white font-bold">{hskBalance.toFixed(4)} HSK</span>
               </div>
               <button
                 onClick={() => {
                   setWalletConnected(false);
                   setWalletAddress(null);
-                  setMntBalance(0);
+                  setHskBalance(0);
                 }}
                 className="flex items-center gap-2 bg-orange-600/80 hover:bg-orange-500/80 backdrop-blur border border-orange-400 px-4 py-2 rounded-none text-sm font-mono transition-all shadow-[0_0_10px_rgba(251,146,60,0.3)] hover:shadow-[0_0_20px_rgba(251,146,60,0.5)]"
                 title="切换钱包"
@@ -378,7 +378,7 @@ const App: React.FC = () => {
         </div>
       </div>
 
-      {activeMarket && activeMarket.id && (
+      {activeMarket && activeMarket.id !== undefined && activeMarket.id !== null && (
         <div className="absolute inset-0 z-20">
           <MarketTerminal 
             market={activeMarket}
@@ -397,7 +397,7 @@ const App: React.FC = () => {
         </div>
       )}
       
-      {activeMarket && !activeMarket.id && (
+      {activeMarket && (activeMarket.id === undefined || activeMarket.id === null) && (
         <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/90">
           <div className="text-white text-center p-8 border border-red-500">
             <p className="text-xl mb-4">⚠️ Market Data Error</p>

@@ -20,7 +20,7 @@ interface MarketTerminalProps {
 
 const MarketTerminal: React.FC<MarketTerminalProps> = ({ market, onClose, onTrade, onDelete, onResolve, onWithdrawDeposit, onClaimRewards, userBalance, userAddress }) => {
   const [tab, setTab] = useState<'DEFEND' | 'ATTACK'>('DEFEND');
-  const [amount, setAmount] = useState<number | ''>('');
+  const [amount, setAmount] = useState<string>('');
   const [isTrading, setIsTrading] = useState(false);
   const [selectedSyndicate, setSelectedSyndicate] = useState<Syndicate | null>(null);
   const [sellZeroDay, setSellZeroDay] = useState(false);
@@ -96,17 +96,14 @@ const MarketTerminal: React.FC<MarketTerminalProps> = ({ market, onClose, onTrad
 
   const numericAmount = Number(amount) || 0;
 
-  // 用户输入的是股数，不是金额
-  const sharesToBuy = Math.floor(numericAmount);
-  
-  // Fee Logic (暂时不用，因为现在是按股数交易)
+  // Fee Logic
   const feePercent = tab === 'ATTACK' && selectedSyndicate ? selectedSyndicate.feePercent : 0;
-  const feeAmount = 0; // 暂时设为0
+  const feeAmount = 0;
   const stakedAmount = numericAmount;
 
   const handleTrade = async () => {
-    if (sharesToBuy <= 0) {
-      alert('Please enter a valid number of shares!');
+    if (numericAmount < 0.001) {
+      alert('Minimum bet is 0.001 HSK!');
       return;
     }
     
@@ -120,13 +117,12 @@ const MarketTerminal: React.FC<MarketTerminalProps> = ({ market, onClose, onTrad
     setIsTrading(true);
     
     try {
-      console.log(`Trading ${sharesToBuy} shares on market ${market.id}`);
+      console.log(`Trading ${numericAmount} HSK on market ${market.id}`);
       
-      // 直接通过智能合约交易（传递股数）
+      // 直接通过智能合约交易（传递 HSK 金额）
       const direction = tab === 'DEFEND' ? Outcome.YES : Outcome.NO;
       
-      // onTrade 会调用 polymarketService.buyYes/buyNo 进行链上交易
-      await onTrade(market.id, direction, sharesToBuy);
+      await onTrade(market.id, direction, numericAmount);
       setAmount('');
       
       // 交易成功后重新加载用户份额
@@ -272,7 +268,7 @@ const MarketTerminal: React.FC<MarketTerminalProps> = ({ market, onClose, onTrad
                     <div className="grid grid-cols-2 gap-4 text-xs font-mono">
                       <div>
                         <div className="text-gray-500 mb-1">Deposit Amount</div>
-                        <div className="text-white font-bold">{market.depositAmount.toFixed(4)} METH</div>
+                        <div className="text-white font-bold">{market.depositAmount.toFixed(4)} HSK</div>
                       </div>
                       <div>
                         <div className="text-gray-500 mb-1">Accumulated Yield</div>
@@ -323,7 +319,7 @@ const MarketTerminal: React.FC<MarketTerminalProps> = ({ market, onClose, onTrad
                                 <Bug className="text-purple-400" size={24} />
                                 <div>
                                     <div className="text-purple-400 font-bold text-sm">AI CITADEL BUY OFFER // AI收购邀约</div>
-                                    <div className="text-xs text-gray-400">Citadel is offering <span className="text-white">50,000 MNT</span> for 0-day exploits on this asset.</div>
+                                    <div className="text-xs text-gray-400">Citadel is offering <span className="text-white">50,000 HSK</span> for 0-day exploits on this asset.</div>
                                 </div>
                             </div>
                             <button className="bg-purple-600 hover:bg-purple-500 text-white text-xs px-3 py-1 uppercase font-bold">
@@ -372,10 +368,10 @@ const MarketTerminal: React.FC<MarketTerminalProps> = ({ market, onClose, onTrad
                                 <div className="text-[10px] text-blue-400 font-bold mb-1">YOUR POSITION:</div>
                                 <div className="grid grid-cols-2 gap-2 text-[10px] font-mono">
                                     <div className="text-green-400">
-                                        DEFEND: {userYesShares} shares
+                                        DEFEND: {userYesShares.toFixed(4)} shares
                                     </div>
                                     <div className="text-red-400">
-                                        ATTACK: {userNoShares} shares
+                                        ATTACK: {userNoShares.toFixed(4)} shares
                                     </div>
                                 </div>
                             </div>
@@ -383,19 +379,19 @@ const MarketTerminal: React.FC<MarketTerminalProps> = ({ market, onClose, onTrad
                         
                         <div className="mb-2">
                             <label className="text-xs text-gray-400 font-mono mb-1 block">
-                                SHARES TO BUY
+                                HSK TO BET
                             </label>
                             <div className="relative">
                                 <input 
                                     type="number" 
                                     value={amount}
-                                    onChange={(e) => setAmount(Number(e.target.value))}
+                                    onChange={(e) => setAmount(e.target.value)}
                                     className="w-full bg-[#111] border border-gray-700 p-3 text-white font-mono focus:border-white focus:outline-none"
-                                    placeholder="Enter shares (e.g. 1, 10, 100)"
-                                    min="1"
-                                    step="1"
+                                    placeholder="Enter HSK amount (e.g. 0.01, 0.1, 1)"
+                                    min="0.001"
+                                    step="0.001"
                                 />
-                                <div className="absolute right-3 top-3 text-gray-500 font-mono text-sm">SHARES</div>
+                                <div className="absolute right-3 top-3 text-gray-500 font-mono text-sm">HSK</div>
                             </div>
                         </div>
 
@@ -403,12 +399,8 @@ const MarketTerminal: React.FC<MarketTerminalProps> = ({ market, onClose, onTrad
                         {numericAmount > 0 && (
                              <div className="mb-4 text-[10px] font-mono text-gray-400 space-y-1 bg-gray-900 p-2">
                                 <div className="flex justify-between">
-                                    <span>SHARES:</span>
-                                    <span className="text-white">{numericAmount} shares</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span>EST. COST:</span>
-                                    <span className="text-yellow-400">{formatCurrency(stakedAmount)}</span>
+                                    <span>BET AMOUNT:</span>
+                                    <span className="text-white">{numericAmount} HSK</span>
                                 </div>
                             </div>
                         )}

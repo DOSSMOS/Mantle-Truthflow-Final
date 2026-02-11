@@ -6,12 +6,12 @@
 import { ethers } from 'ethers';
 import { Market } from '../types';
 
-const CONTRACT_ADDRESS = '0x76fe9c7fA93afF8053FFfBD9995A611B49eb5C6F';
-const RPC_URL = 'https://rpc.sepolia.mantle.xyz';
+const CONTRACT_ADDRESS = '0x71111F3b60E2f62eA306662383FcAfE2DCc8afa9';
+const RPC_URL = 'https://testnet.hsk.xyz';
 
 const CONTRACT_ABI = [
     "function marketCount() view returns (uint256)",
-    "function markets(uint256) view returns (uint256 id, string question, uint256 yesPool, uint256 noPool, uint256 totalYesShares, uint256 totalNoShares, uint64 closeTime, uint8 status, bool outcome, bytes32 evidenceTxHash, address creator, uint64 createdAt)"
+    "function markets(uint256) view returns (string question, string description, uint256 endTime, uint256 yesPool, uint256 noPool, uint256 totalYesShares, uint256 totalNoShares, uint8 status, uint8 outcome, bytes32 verifiedTxHash, uint256 createdAt, address creator, uint256 seedFund)"
 ];
 
 // 市场标题到中文标题的映射
@@ -71,7 +71,7 @@ class ContractDataService {
             
             const markets: Market[] = [];
             
-            for (let i = 1; i <= Number(count); i++) {
+            for (let i = 0; i < Number(count); i++) {
                 try {
                     const marketData = await this.contract.markets(i);
                     const statusNum = Number(marketData.status);
@@ -86,9 +86,10 @@ class ContractDataService {
                     const yesPool = Number(ethers.formatEther(marketData.yesPool));
                     const noPool = Number(ethers.formatEther(marketData.noPool));
                     const createdAt = Number(marketData.createdAt);
+                    const seedFund = Number(ethers.formatEther(marketData.seedFund));
                     
                     const market: Market = {
-                        id: Number(marketData.id),
+                        id: i,
                         title: title,
                         titleCN: TITLE_CN_MAP[title] || title,
                         description: DESCRIPTION_MAP[title] || 'Security audit prediction market',
@@ -150,7 +151,7 @@ class ContractDataService {
             const noPool = Number(ethers.formatEther(marketData.noPool));
             
             return {
-                id: Number(marketData.id),
+                id: marketId,
                 title: title,
                 titleCN: TITLE_CN_MAP[title] || title,
                 description: DESCRIPTION_MAP[title] || 'Security audit prediction market',

@@ -74,6 +74,11 @@ const AddMarketPanel: React.FC<AddMarketPanelProps> = ({ onAddMarket, onClose, o
       setMdContent(text);
       setIsUploadMode(true);
       
+      // 从MD内容提取标题（第一个 # 开头的行）
+      const titleMatch = text.match(/^#\s+(.+)/m);
+      const extractedTitle = titleMatch ? titleMatch[1].trim() : file.name.replace('.md', '');
+      setFormData(prev => ({ ...prev, title: extractedTitle, description: text.substring(0, 500) }));
+      
       alert('MD文件已上传！点击"确认创建"将调用AI分析并创建市场。');
     } catch (error: any) {
       alert('文件读取失败: ' + error.message);
@@ -195,7 +200,7 @@ const AddMarketPanel: React.FC<AddMarketPanelProps> = ({ onAddMarket, onClose, o
       // 如果是上传模式且还没有AI分析结果，现在调用AI
       if (isUploadMode && mdContent && !aiResult) {
         // 调用AI API分析MD文件
-        const response = await fetch('https://ai-production-f4f1.up.railway.app/api/analyze', {
+        const response = await fetch('https://ai-production-1bbe.up.railway.app/api/analyze', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -530,7 +535,7 @@ const AddMarketPanel: React.FC<AddMarketPanelProps> = ({ onAddMarket, onClose, o
           {/* Total Liquidity */}
           <div>
             <label className="block text-xs font-mono text-blue-400 mb-2">
-              CREATOR DEPOSIT (ETH - YOU PROVIDE)
+              SEED FUND (HSK - YOU PROVIDE)
             </label>
             <input
               type="number"
@@ -541,22 +546,22 @@ const AddMarketPanel: React.FC<AddMarketPanelProps> = ({ onAddMarket, onClose, o
               className="w-full bg-black/50 border border-blue-700 px-4 py-2 text-white font-mono focus:border-blue-500 focus:outline-none"
             />
             <small className="text-xs text-yellow-500 font-mono mt-1 block">
-              ⚠️ You will send {formData.depositAmount.toFixed(4)} ETH as creator deposit (Ethereum Sepolia)
+              ⚠️ You will send {formData.depositAmount.toFixed(4)} HSK as seed fund (HashKey Chain Testnet)
             </small>
             <small className="text-xs text-cyan-400 font-mono mt-1 block">
-              💡 System will auto-switch to Ethereum Sepolia network for deposit payment
+              💡 Seed fund will be added to the market pool directly
             </small>
             {formData.depositAmount > 0 ? (
               <small className="text-xs text-green-400 font-mono mt-1 block">
-                ✅ Yield Enabled: 5% APR (~{(formData.depositAmount * 0.05).toFixed(6)} ETH/year)
+                ✅ Seed fund: {formData.depositAmount.toFixed(4)} HSK will be added to market liquidity
               </small>
             ) : (
               <small className="text-xs text-gray-500 font-mono mt-1 block">
-                ⚠️ Set deposit amount to enable yield generation (5% APR)
+                ⚠️ Set seed fund amount to provide initial market liquidity
               </small>
             )}
             <small className="text-xs text-gray-500 font-mono mt-1 block">
-              💰 Deposit will be stored in DepositManager contract and can be withdrawn after market resolves
+              💰 Seed fund goes directly into the market pool as initial liquidity
             </small>
           </div>
 

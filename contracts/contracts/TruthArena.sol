@@ -24,6 +24,7 @@ contract TruthArena {
         bytes32 verifiedTxHash;
         uint256 createdAt;
         address creator;
+        uint256 seedFund;  // Seed fund deposited by creator (non-refundable, goes to reward pool)
     }
     
     struct Position {
@@ -52,7 +53,8 @@ contract TruthArena {
         uint256 indexed marketId,
         string question,
         uint256 endTime,
-        address indexed creator
+        address indexed creator,
+        uint256 seedFund
     );
     
     event BetPlaced(
@@ -98,14 +100,17 @@ contract TruthArena {
      * @param _question The question being predicted
      * @param _description Additional description
      * @param _duration Duration in seconds until market closes
+     * @notice Creator must deposit seed fund (non-refundable) as base reward pool
+     * @notice Creator can optionally place bets later like any other user
      */
     function createMarket(
         string memory _question,
         string memory _description,
         uint256 _duration
-    ) external returns (uint256) {
+    ) external payable returns (uint256) {
         require(_duration > 0, "Duration must be positive");
         require(bytes(_question).length > 0, "Question required");
+        require(msg.value >= MIN_BET, "Seed fund required");
         
         uint256 marketId = marketCount++;
         Market storage market = markets[marketId];
@@ -117,8 +122,14 @@ contract TruthArena {
         market.outcome = Outcome.Unresolved;
         market.createdAt = block.timestamp;
         market.creator = msg.sender;
+        market.seedFund = msg.value;
         
-        emit MarketCreated(marketId, _question, market.endTime, msg.sender);
+        // Seed fund split 50/50 into YES/NO pools as base reward
+        uint256 half = msg.value / 2;
+        market.yesPool = half;
+        market.noPool = msg.value - half;
+        
+        emit MarketCreated(marketId, _question, market.endTime, msg.sender, msg.value);
         return marketId;
     }
     

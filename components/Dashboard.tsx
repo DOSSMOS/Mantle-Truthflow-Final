@@ -148,7 +148,7 @@ const Dashboard: React.FC<DashboardProps> = ({ markets, onSelect, onHover, hover
       <div className="bg-black/60 backdrop-blur-md border border-gray-800 p-2 pointer-events-auto">
         <div className="flex items-center justify-between text-[10px] text-gray-500">
             <span className="flex items-center gap-1"><Activity size={10}/> SCANNING...</span>
-            <span>MANTLE_NET: CONNECTED</span>
+            <span>HASHKEY_NET: CONNECTED</span>
         </div>
       </div>
     </div>

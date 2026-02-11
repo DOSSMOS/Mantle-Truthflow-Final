@@ -179,3 +179,4 @@ MIT License
 ---
 
 *"In an era of deepfakes and supply chain opacity, truth is the scarcest asset."*
+![alt text](image.png)

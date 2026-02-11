@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Market } from '../types';
 import { calculateProbability } from '../services/mantleService';
 import { polymarketService } from '../services/polymarketService';
-import { depositContractService } from '../services/depositContractService';
+// deposit 功能已移除，种子资金通过 createMarket 的 msg.value 直接发送
 
 export const useMarketManagement = (
   markets: Market[],
@@ -19,45 +19,68 @@ export const useMarketManagement = (
     try {
       addToTicker(`[SYSTEM] Creating market on blockchain...`);
       
-      let depositId: number | undefined;
-      if (marketData.depositAmount && marketData.depositAmount > 0) {
-        addToTicker(`[ETH] Creating deposit: ${marketData.depositAmount} METH...`);
-        const depositResult = await depositContractService.createDeposit(
-          marketData.title,
-          marketData.depositAmount
-        );
-        if (!depositResult.success) {
-          throw new Error(depositResult.error || 'Failed to create deposit');
-        }
-        depositId = depositResult.depositId;
-        addToTicker(`[METH] Deposit created! ID: ${depositId}`);
-      }
-      
-      addToTicker(`[MANTLE] Switching to Mantle Sepolia network...`);
+      addToTicker(`[HASHKEY] Switching to HashKey Chain Testnet...`);
       await polymarketService.connect();
-      addToTicker(`[MANTLE] Connected to Mantle Sepolia`);
+      addToTicker(`[HASHKEY] Connected to HashKey Chain Testnet`);
       
       const closeTime = Math.floor(Date.now() / 1000) + (marketData.duration || 86400);
-      addToTicker(`[MANTLE] Calling createMarket contract...`);
+      
+      // 从 yesPool/noPool 计算 AI 赔率 (basis points)
+      const totalPool = (marketData.yesPool || 0) + (marketData.noPool || 0);
+      const yesBasisPoints = totalPool > 0 
+        ? Math.round((marketData.yesPool / totalPool) * 10000)
+        : 5000; // 默认 50/50
+      
+      console.log('[DEBUG] marketData:', JSON.stringify({
+        title: marketData.title,
+        yesPool: marketData.yesPool,
+        noPool: marketData.noPool,
+        depositAmount: marketData.depositAmount,
+        totalPool,
+        yesBasisPoints
+      }));
+      
+      addToTicker(`[HASHKEY] Calling createMarket contract (YES ratio: ${(yesBasisPoints/100).toFixed(1)}%)...`);
+      
+      const seedFund = marketData.depositAmount ? String(marketData.depositAmount) : '0.01';
+      console.log('[DEBUG] seedFund string:', seedFund);
       
       const createResult = await polymarketService.createMarket(
         marketData.title,
-        closeTime
+        closeTime,
+        seedFund,
+        yesBasisPoints
       );
       
-      if (!createResult.success || !createResult.marketId) {
+      if (!createResult.success || createResult.marketId === undefined || createResult.marketId === null) {
         addToTicker(`[ERROR] Market creation failed: ${createResult.error}`);
         throw new Error(createResult.error || 'Failed to create market');
       }
       
       const marketId = createResult.marketId;
-      addToTicker(`[MANTLE] Market created! ID: ${marketId}`);
+      addToTicker(`[HASHKEY] Market created! ID: ${marketId}`);
+      
+      // 从链上读取实际的 yesPool/noPool（合约按 AI 赔率分配后的真实值）
+      let onChainYesPool = marketData.yesPool;
+      let onChainNoPool = marketData.noPool;
+      try {
+        const onChainData = await polymarketService.getMarket(marketId);
+        if (onChainData) {
+          onChainYesPool = onChainData.yesPool;
+          onChainNoPool = onChainData.noPool;
+          console.log(`[DEBUG] On-chain pools: YES=${onChainYesPool}, NO=${onChainNoPool}`);
+        }
+      } catch (e) {
+        console.error('Failed to read on-chain market data:', e);
+      }
       
       const newMarket: Market = {
         ...marketData,
         id: marketId,
-        depositId: depositId,
-        history: [{ timestamp: Date.now(), probYes: calculateProbability(marketData.yesPool, marketData.noPool) }]
+        yesPool: onChainYesPool,
+        noPool: onChainNoPool,
+        depositId: undefined,
+        history: [{ timestamp: Date.now(), probYes: calculateProbability(onChainYesPool, onChainNoPool) }]
       };
       
       setMarkets(prev => [...prev, newMarket]);
@@ -74,9 +97,9 @@ export const useMarketManagement = (
       if (error.message.includes('user rejected')) {
         alert('❌ 交易被取消\n\n您取消了交易。如果押金已支付，请联系支持团队。');
       } else if (error.message.includes('insufficient funds')) {
-        alert('❌ 余额不足\n\n请确保您的 Mantle Sepolia 钱包有足够的 MNT 用于 Gas 费用。');
+        alert('❌ 余额不足\n\n请确保您的 HashKey Chain 钱包有足够的 HSK 用于 Gas 费用。');
       } else if (error.message.includes('network')) {
-        alert('❌ 网络切换失败\n\n请手动切换到 Mantle Sepolia 网络后重试。');
+        alert('❌ 网络切换失败\n\n请手动切换到 HashKey Chain Testnet 网络后重试。');
       } else {
         alert(`❌ 创建市场失败\n\n错误: ${error.message}\n\n如果押金已支付，请保存交易哈希并联系支持团队。`);
       }
@@ -97,7 +120,7 @@ export const useMarketManagement = (
     
     if (confirm(`Resolve Market #${marketId} as ${outcomeText}?${depositInfo}`)) {
       try {
-        addToTicker(`[MANTLE] Resolving market #${marketId}...`);
+        addToTicker(`[HASHKEY] Resolving market #${marketId}...`);
         
         await polymarketService.connect();
         
@@ -118,10 +141,10 @@ export const useMarketManagement = (
         ));
         
         // 自动领取奖励
-        addToTicker(`[MANTLE] Auto-claiming rewards for winners...`);
+        addToTicker(`[HASHKEY] Auto-claiming rewards for winners...`);
         try {
           const rewards = await polymarketService.claimRewards(marketId);
-          addToTicker(`[SUCCESS] Claimed ${rewards} MNT rewards!`);
+          addToTicker(`[SUCCESS] Claimed ${rewards} HSK rewards!`);
           addToTicker(`[INFO] Rewards transferred to your wallet`);
           setTimeout(() => refreshBalance(), 2000);
         } catch (claimError: any) {
@@ -131,7 +154,7 @@ export const useMarketManagement = (
         }
         
         if (market.depositId && market.depositAmount) {
-          addToTicker(`[INFO] Deposit ${market.depositAmount} METH + interest can be withdrawn`);
+          addToTicker(`[INFO] Seed fund ${market.depositAmount} HSK was added to market liquidity`);
         }
         
       } catch (error: any) {
@@ -144,7 +167,7 @@ export const useMarketManagement = (
           addToTicker(`[ERROR] Only admin can resolve markets`);
           addToTicker(`[INFO] Please switch to admin wallet: 0x569Fe...f2f6`);
         } else if (error.message.includes('Market does not exist')) {
-          alert(`❌ 市场不存在\n\n该市场在新合约上不存在。\n\n原因:\n- 合约已更新到新地址\n- 旧合约上的市场无法在新合约上操作\n\n解决方案:\n1. 删除旧市场（DELETE按钮）\n2. 重新创建市场\n3. 在新市场上进行交易和解决\n\n新合约地址: 0x76fe9c7fA93afF8053FFfBD9995A611B49eb5C6F`);
+          alert(`❌ 市场不存在\n\n该市场在合约上不存在。\n\n合约地址: 0x71111F3b60E2f62eA306662383FcAfE2DCc8afa9`);
           addToTicker(`[ERROR] Market does not exist on new contract`);
           addToTicker(`[INFO] Please delete old market and create a new one`);
         } else if (error.message.includes('Too early to resolve')) {
@@ -160,9 +183,9 @@ export const useMarketManagement = (
         } else if (error.message.includes('user rejected')) {
           alert('❌ 交易被取消\n\n您取消了交易。');
         } else if (error.message.includes('insufficient funds')) {
-          alert('❌ 余额不足\n\n请确保您的钱包有足够的 MNT 用于 Gas 费用。');
+          alert('❌ 余额不足\n\n请确保您的钱包有足够的 HSK 用于 Gas 费用。');
         } else {
-          alert(`❌ 解决市场失败\n\n错误: ${error.message}\n\n请检查:\n1. 是否使用管理员钱包\n2. 网络是否正确 (Mantle Sepolia)\n3. 钱包余额是否充足`);
+          alert(`❌ 解决市场失败\n\n错误: ${error.message}\n\n请检查:\n1. 是否使用管理员钱包\n2. 网络是否正确 (HashKey Chain Testnet)\n3. 钱包余额是否充足`);
         }
       }
     }
@@ -179,12 +202,12 @@ export const useMarketManagement = (
         return;
       }
       
-      addToTicker(`[MANTLE] Claiming rewards for market #${marketId}...`);
+      addToTicker(`[HASHKEY] Claiming rewards for market #${marketId}...`);
       
       await polymarketService.connect();
       const rewards = await polymarketService.claimRewards(marketId);
       
-      addToTicker(`[SUCCESS] Claimed ${rewards} MNT rewards!`);
+      addToTicker(`[SUCCESS] Claimed ${rewards} HSK rewards!`);
       addToTicker(`[INFO] Rewards transferred to your wallet`);
       
       setTimeout(() => refreshBalance(), 2000);
@@ -204,10 +227,10 @@ export const useMarketManagement = (
 
     if (confirm(`确认删除市场 #${marketId}?\n\n注意: 只能删除没有任何交易的市场。`)) {
       try {
-        addToTicker(`[MANTLE] Deleting market #${marketId}...`);
+        addToTicker(`[HASHKEY] Cancelling market #${marketId}...`);
         
         await polymarketService.connect();
-        await polymarketService.deleteMarket(marketId);
+        await polymarketService.cancelMarket(marketId);
         
         addToTicker(`[SUCCESS] Market #${marketId} deleted from blockchain`);
         

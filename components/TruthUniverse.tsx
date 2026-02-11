@@ -1,6 +1,6 @@
 import React, { useRef, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Stars, Text, Trail, Line } from '@react-three/drei';
+import { OrbitControls, Stars, Text, Trail, Line, Billboard } from '@react-three/drei';
 import * as THREE from 'three';
 import { Market } from '../types';
 import { calculateProbability } from '../services/mantleService';
@@ -78,18 +78,20 @@ const StarNode: React.FC<StarNodeProps> = ({ market, onClick, isActive, isHovere
       </Trail>
       
       {/* Floating Label: Always visible if hovered, otherwise only if close or active */}
-      <Text
-        position={[0, baseSize + 1.5, 0]}
-        fontSize={isActive || isHovered ? 0.8 : 0.5}
-        color={isActive || isHovered ? "#00ffcc" : "#aaaaaa"}
-        anchorX="center"
-        anchorY="middle"
-        outlineWidth={isHovered ? 0.05 : 0}
-        outlineColor="#000000"
-      >
-        {market.title}
-        {(isActive || isHovered) && `\n${(probYes * 100).toFixed(1)}%`}
-      </Text>
+      <Billboard>
+        <Text
+          position={[0, baseSize + 1.5, 0]}
+          fontSize={isActive || isHovered ? 0.5 : 0.35}
+          color={isActive || isHovered ? "#00ffcc" : "#aaaaaa"}
+          anchorX="center"
+          anchorY="middle"
+          outlineWidth={isHovered ? 0.03 : 0}
+          outlineColor="#000000"
+          maxWidth={8}
+        >
+          {market.title}
+        </Text>
+      </Billboard>
     </group>
   );
 };

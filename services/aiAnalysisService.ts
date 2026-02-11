@@ -1,7 +1,7 @@
 // AI 风险评估 API 服务
 
 const API_CONFIG = {
-    BASE_URL: 'https://ai-production-f4f1.up.railway.app',
+    BASE_URL: 'https://ai-production-1bbe.up.railway.app',
     ENDPOINTS: {
         HEALTH: '/api/health',
         ANALYZE: '/api/analyze'

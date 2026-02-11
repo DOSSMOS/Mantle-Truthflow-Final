@@ -10,7 +10,7 @@ async function main() {
   console.log("📝 Deploying with account:", deployer.address);
 
   const balance = await hre.ethers.provider.getBalance(deployer.address);
-  console.log("💰 Account balance:", hre.ethers.formatEther(balance), "ETH");
+  console.log("💰 Account balance:", hre.ethers.formatEther(balance), "HSK");
 
   // Deploy TruthArena
   console.log("\n⏳ Deploying TruthArenaV2 (with Dynamic Yield Strategy)...");
@@ -58,7 +58,7 @@ async function main() {
     await new Promise(resolve => setTimeout(resolve, 30000));
 
     try {
-      console.log("🔍 Verifying contract on Mantlescan...");
+      console.log("🔍 Verifying contract on block explorer...");
       await hre.run("verify:verify", {
         address: address,
         constructorArguments: []

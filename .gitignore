@@ -1,2 +1,26 @@
-# Dependencies (exclude from GitHub)
-node_modules
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+.netlify/
+
+# Hardhat
+contracts/artifacts/
+contracts/cache/
+
+# Environment
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test files
+test-contract.js
+check-market.js

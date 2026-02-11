@@ -77,9 +77,9 @@ export class PaymentService {
     }
 
     /**
-     * 用户向系统钱包付款（MNT - Mantle Sepolia）
+     * 用户向系统钱包付款（HSK - HashKey Chain）
      * @param userAddress 用户地址
-     * @param amount 金额（MNT）
+     * @param amount 金额（HSK）
      * @param purpose 付款目的（创建市场/下注等）
      */
     async requestPaymentFromUser(
@@ -92,7 +92,7 @@ export class PaymentService {
                 return { success: false, error: 'MetaMask not installed' };
             }
 
-            // 将 MNT 转换为 Wei (18 位小数)
+            // 将 HSK 转换为 Wei (18 位小数)
             const amountInWei = BigInt(Math.floor(amount * 1e18));
             const amountHex = '0x' + amountInWei.toString(16);
 
@@ -103,11 +103,11 @@ export class PaymentService {
                     from: userAddress,
                     to: this.systemWalletAddress,
                     value: amountHex,
-                    data: '0x' // 可以添加备注数据
+                    data: '0x'
                 }]
             });
 
-            console.log(`✅ Payment requested: ${amount} MNT for ${purpose}`);
+            console.log(`✅ Payment requested: ${amount} HSK for ${purpose}`);
             console.log(`Transaction hash: ${txHash}`);
 
             return { success: true, txHash };
@@ -132,10 +132,10 @@ export class PaymentService {
                 return { success: false, error: 'MetaMask not installed' };
             }
 
-            console.log(`💰 Sending reward: ${amount} MNT to ${userAddress}`);
+            console.log(`💰 Sending reward: ${amount} HSK to ${userAddress}`);
             console.log(`Reason: ${reason}`);
 
-            // 将 MNT 转换为 Wei
+            // 将 HSK 转换为 Wei
             const amountInWei = BigInt(Math.floor(amount * 1e18));
             const amountHex = '0x' + amountInWei.toString(16);
 
@@ -173,9 +173,9 @@ export class PaymentService {
             });
 
             const balanceInWei = parseInt(balanceHex, 16);
-            const balanceInMNT = balanceInWei / 1e18;
+            const balanceInHSK = balanceInWei / 1e18;
 
-            return balanceInMNT;
+            return balanceInHSK;
 
         } catch (error) {
             console.error('Failed to get system wallet balance:', error);

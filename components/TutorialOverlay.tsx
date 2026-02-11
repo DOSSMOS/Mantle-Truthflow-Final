@@ -54,7 +54,7 @@ const STEPS = [
   },
   {
     title: "INITIALIZE PROTOCOL",
-    content: "You have been allocated 5,000 MNT (Testnet). Enter the markets, upload evidence, and extract value from the truth.",
+    content: "You have been allocated 5,000 HSK (Testnet). Enter the markets, upload evidence, and extract value from the truth.",
     icon: <Zap size={64} className="text-yellow-400" />,
     color: "border-yellow-400"
   }

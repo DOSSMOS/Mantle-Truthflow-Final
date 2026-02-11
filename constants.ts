@@ -28,7 +28,7 @@ export const MOCK_MARKETS: Market[] = [
     id: 2,
     title: "Target: GPU Cluster Rent-Fi",
     titleCN: "目标：新加坡 GPU 算力租赁集群",
-    description: "Verify uptime of 10,000 H100 GPUs tokenized on Mantle. Zero-day rumor: Virtual Machine looping same workload to fake activity. / 验证1万张H100显卡的在线率。零日传闻：虚拟机循环跑同一个任务伪造活跃度。",
+    description: "Verify uptime of 10,000 H100 GPUs tokenized on HashKey Chain. Zero-day rumor: Virtual Machine looping same workload to fake activity. / 验证1万张H100显卡的在线率。零日传闻：虚拟机循环跑同一个任务伪造活跃度。",
     rwaType: 'Infra',
     // CPMM: To show ~47% Safety (Attack occurring).
     // Price(Yes) = 80 / (92 + 80) = 0.46

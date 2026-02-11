@@ -26,6 +26,16 @@ module.exports = {
       url: "https://rpc.mantle.xyz",
       chainId: 5000,
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : []
+    },
+    hashkeyTestnet: {
+      url: process.env.HASHKEY_RPC_URL || "https://testnet.hsk.xyz",
+      chainId: 133,
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : []
+    },
+    hashkeyMainnet: {
+      url: "https://mainnet.hsk.xyz",
+      chainId: 177,
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : []
     }
   },
   etherscan: {

@@ -3,8 +3,8 @@ pragma solidity ^0.8.20;
 
 /**
  * @title TruthArenaV2
- * @dev 预测市场合约 - 支持动态分层生息策略
- * @notice 根据资金池规模和市场周期自动决定是否启用生息
+ * @dev Prediction market contract on HashKey Chain with seed fund mechanism
+ * @notice Creator deposits seed fund as base reward pool, users bet to verify
  */
 contract TruthArenaV2 {
     
@@ -24,7 +24,7 @@ contract TruthArenaV2 {
         bytes32 verifiedTxHash;
         uint256 createdAt;
         address creator;
-        bool yieldEnabled;  // 是否启用生息
+        uint256 seedFund;  // Seed fund deposited by creator (non-refundable, goes to reward pool)
     }
     
     struct Position {
@@ -32,12 +32,6 @@ contract TruthArenaV2 {
         uint256 noShares;
         uint256 yesCost;
         uint256 noCost;
-    }
-    
-    // 分层策略配置
-    struct YieldTier {
-        uint256 duration;      // 市场周期（秒）
-        uint256 threshold;     // 资金池临界点
     }
     
     // State variables
@@ -54,15 +48,12 @@ contract TruthArenaV2 {
     address public oracle;
     uint256 public collectedFees;
     
-    // 分层策略配置
-    YieldTier[3] public yieldTiers;
-    
     // Events
-    event MarketCreated(uint256 indexed marketId, string question, uint256 endTime, bool yieldEnabled);
+    event MarketCreated(uint256 indexed marketId, string question, uint256 endTime, address indexed creator, uint256 seedFund);
     event BetPlaced(uint256 indexed marketId, address indexed user, bool prediction, uint256 amount, uint256 shares);
     event MarketResolved(uint256 indexed marketId, Outcome outcome, bytes32 txHash);
     event RewardClaimed(uint256 indexed marketId, address indexed user, uint256 amount);
-    event YieldStrategyUpdated(uint256 indexed marketId, bool enabled);
+    event MarketCancelled(uint256 indexed marketId);
     
     modifier onlyOwner() {
         require(msg.sender == owner, "Only owner");
@@ -77,37 +68,23 @@ contract TruthArenaV2 {
     constructor() {
         owner = msg.sender;
         oracle = msg.sender;
-        
-        // 初始化分层策略
-        // 短期市场（≤7天）：5 ETH
-        yieldTiers[0] = YieldTier({
-            duration: 7 days,
-            threshold: 5 ether
-        });
-        
-        // 中期市场（≤30天）：1 ETH
-        yieldTiers[1] = YieldTier({
-            duration: 30 days,
-            threshold: 1 ether
-        });
-        
-        // 长期市场（>30天）：0.5 ETH
-        yieldTiers[2] = YieldTier({
-            duration: type(uint256).max,
-            threshold: 0.5 ether
-        });
     }
     
     /**
      * @dev 创建新市场
+     * @notice Creator must deposit seed fund (non-refundable) as base reward pool
+     * @notice Creator can optionally place bets later like any other user
      */
     function createMarket(
         string memory _question,
         string memory _description,
-        uint256 _duration
-    ) external returns (uint256) {
+        uint256 _duration,
+        uint256 _yesBasisPoints
+    ) external payable returns (uint256) {
         require(_duration > 0, "Duration must be positive");
         require(bytes(_question).length > 0, "Question required");
+        require(msg.value >= MIN_BET, "Seed fund required");
+        require(_yesBasisPoints > 0 && _yesBasisPoints < BASIS_POINTS, "Invalid ratio");
         
         uint256 marketId = marketCount++;
         Market storage market = markets[marketId];
@@ -119,9 +96,14 @@ contract TruthArenaV2 {
         market.outcome = Outcome.Unresolved;
         market.createdAt = block.timestamp;
         market.creator = msg.sender;
-        market.yieldEnabled = false; // 初始不启用，等资金池达到临界点
+        market.seedFund = msg.value;
         
-        emit MarketCreated(marketId, _question, market.endTime, false);
+        // Seed fund split by AI probability ratio into YES/NO pools
+        // _yesBasisPoints: AI predicted YES probability in basis points (e.g. 7000 = 70%)
+        market.yesPool = (msg.value * _yesBasisPoints) / BASIS_POINTS;
+        market.noPool = msg.value - market.yesPool;
+        
+        emit MarketCreated(marketId, _question, market.endTime, msg.sender, msg.value);
         return marketId;
     }
     
@@ -159,47 +141,7 @@ contract TruthArenaV2 {
             positions[_marketId][msg.sender].noCost += msg.value;
         }
         
-        // 检查是否达到生息临界点
-        _checkAndEnableYield(_marketId);
-        
         emit BetPlaced(_marketId, msg.sender, _prediction, msg.value, shares);
-    }
-    
-    /**
-     * @dev 检查并启用生息策略
-     */
-    function _checkAndEnableYield(uint256 _marketId) internal {
-        Market storage market = markets[_marketId];
-        
-        // 如果已启用，跳过
-        if (market.yieldEnabled) return;
-        
-        uint256 totalPool = market.yesPool + market.noPool;
-        uint256 marketDuration = market.endTime - market.createdAt;
-        
-        // 根据市场周期确定临界点
-        uint256 threshold = _getYieldThreshold(marketDuration);
-        
-        // 如果资金池达到临界点，启用生息
-        if (totalPool >= threshold) {
-            market.yieldEnabled = true;
-            emit YieldStrategyUpdated(_marketId, true);
-            
-            // TODO: 在这里集成 Lido stETH 或其他生息协议
-            // _depositToYieldProtocol(totalPool);
-        }
-    }
-    
-    /**
-     * @dev 根据市场周期获取生息临界点
-     */
-    function _getYieldThreshold(uint256 _duration) internal view returns (uint256) {
-        for (uint256 i = 0; i < yieldTiers.length; i++) {
-            if (_duration <= yieldTiers[i].duration) {
-                return yieldTiers[i].threshold;
-            }
-        }
-        return yieldTiers[yieldTiers.length - 1].threshold;
     }
     
     /**
@@ -233,11 +175,6 @@ contract TruthArenaV2 {
         market.status = MarketStatus.Resolved;
         market.outcome = _outcome;
         market.verifiedTxHash = _txHash;
-        
-        // TODO: 如果启用了生息，从协议中提取资金
-        // if (market.yieldEnabled) {
-        //     _withdrawFromYieldProtocol(_marketId);
-        // }
         
         emit MarketResolved(_marketId, _outcome, _txHash);
     }
@@ -278,6 +215,7 @@ contract TruthArenaV2 {
         Market storage market = markets[_marketId];
         require(market.status == MarketStatus.Active, "Market not active");
         market.status = MarketStatus.Cancelled;
+        emit MarketCancelled(_marketId);
     }
     
     /**
@@ -311,7 +249,7 @@ contract TruthArenaV2 {
         uint256 totalNoShares,
         MarketStatus status,
         Outcome outcome,
-        bool yieldEnabled
+        uint256 seedFund
     ) {
         Market storage m = markets[_marketId];
         return (
@@ -324,7 +262,7 @@ contract TruthArenaV2 {
             m.totalNoShares,
             m.status,
             m.outcome,
-            m.yieldEnabled
+            m.seedFund
         );
     }
     
@@ -383,33 +321,6 @@ contract TruthArenaV2 {
             uint256 newTotalNoShares = m.totalNoShares + shares;
             return (shares * totalPool) / newTotalNoShares;
         }
-    }
-    
-    /**
-     * @dev 更新分层策略配置（仅 owner）
-     */
-    function updateYieldTier(
-        uint256 _tierIndex,
-        uint256 _duration,
-        uint256 _threshold
-    ) external onlyOwner {
-        require(_tierIndex < yieldTiers.length, "Invalid tier index");
-        yieldTiers[_tierIndex] = YieldTier({
-            duration: _duration,
-            threshold: _threshold
-        });
-    }
-    
-    /**
-     * @dev 获取分层策略配置
-     */
-    function getYieldTier(uint256 _tierIndex) external view returns (
-        uint256 duration,
-        uint256 threshold
-    ) {
-        require(_tierIndex < yieldTiers.length, "Invalid tier index");
-        YieldTier storage tier = yieldTiers[_tierIndex];
-        return (tier.duration, tier.threshold);
     }
     
     /**

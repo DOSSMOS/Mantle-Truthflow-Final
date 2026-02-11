@@ -2,62 +2,63 @@
 export const CONTRACT_CONFIG = {
     // 网络配置
     NETWORKS: {
-        MANTLE_SEPOLIA: {
-            chainId: '0x138B', // 5003
-            chainName: 'Mantle Sepolia Testnet',
-            rpcUrls: ['https://rpc.sepolia.mantle.xyz'],
+        HASHKEY_TESTNET: {
+            chainId: '0x85', // 133
+            chainName: 'HashKey Chain Testnet',
+            rpcUrls: ['https://testnet.hsk.xyz'],
             nativeCurrency: {
-                name: 'MNT',
-                symbol: 'MNT',
+                name: 'HSK',
+                symbol: 'HSK',
                 decimals: 18
             },
-            blockExplorerUrls: ['https://explorer.sepolia.mantle.xyz']
+            blockExplorerUrls: ['https://testnet-explorer.hsk.xyz']
         },
-        ETHEREUM_SEPOLIA: {
-            chainId: '0xaa36a7', // 11155111
-            chainName: 'Ethereum Sepolia Testnet',
-            rpcUrls: ['https://sepolia.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161'],
+        HASHKEY_MAINNET: {
+            chainId: '0xB1', // 177
+            chainName: 'HashKey Chain',
+            rpcUrls: ['https://mainnet.hsk.xyz'],
             nativeCurrency: {
-                name: 'ETH',
-                symbol: 'ETH',
+                name: 'HSK',
+                symbol: 'HSK',
                 decimals: 18
             },
-            blockExplorerUrls: ['https://sepolia.etherscan.io']
+            blockExplorerUrls: ['https://hashkey.blockscout.com']
         },
         LOCALHOST: {
             chainId: '0x7A69', // 31337
             chainName: 'Hardhat Local',
             rpcUrls: ['http://127.0.0.1:8545'],
             nativeCurrency: {
-                name: 'ETH',
-                symbol: 'ETH',
+                name: 'HSK',
+                symbol: 'HSK',
                 decimals: 18
             }
         }
     },
 
     // 默认网络
-    DEFAULT_NETWORK: 'MANTLE_SEPOLIA',
+    DEFAULT_NETWORK: 'HASHKEY_TESTNET',
 
-    // Mantle Sepolia 合约地址
-    POLYMARKET_CONTRACT_ADDRESS: '0x76fe9c7fA93afF8053FFfBD9995A611B49eb5C6F',
-    TRANSFORMATION_REGISTRY_ADDRESS: '0x22aC931d73351a33CeD412155999cd4945984184',
-    
-    // Ethereum Sepolia 合约地址
-    DEPOSIT_CONTRACT_ADDRESS: '0xD9eB252A74057965600025023da1bDC51dE3d158',
+    // HashKey Chain Testnet 合约地址
+    POLYMARKET_CONTRACT_ADDRESS: '0x71111F3b60E2f62eA306662383FcAfE2DCc8afa9',
 
     // 合约 ABI
     CONTRACT_ABI: [
         "function marketCount() view returns (uint256)",
-        "function getMarket(uint256 marketId) view returns (tuple(uint256 id, string question, address creator, address oracle, uint256 openTime, uint256 closeTime, uint256 yesPool, uint256 noPool, uint256 totalVolume, uint8 status, bool outcome, uint256 createdAt))",
-        "function createMarket(string memory question, address oracle, uint256 openTime, uint256 closeTime) returns (uint256)",
-        "function placeBet(uint256 marketId, bool prediction) payable",
-        "function getCurrentOdds(uint256 marketId) view returns (uint256 yesOdds, uint256 noOdds)",
-        "function getUserBets(uint256 marketId, address user) view returns (tuple(uint256 yesAmount, uint256 noAmount, uint256 totalAmount, bool hasBet))",
-        "function claimReward(uint256 marketId)",
-        "event MarketCreated(uint256 indexed marketId, string question, address creator, uint256 openTime, uint256 closeTime)",
-        "event BetPlaced(uint256 indexed marketId, address indexed user, bool prediction, uint256 amount, uint256 timestamp)",
-        "event MarketResolved(uint256 indexed marketId, bool outcome, uint256 timestamp)"
+        "function getMarket(uint256 marketId) view returns (string question, string description, uint256 endTime, uint256 yesPool, uint256 noPool, uint256 totalYesShares, uint256 totalNoShares, uint8 status, uint8 outcome, uint256 seedFund)",
+        "function createMarket(string memory _question, string memory _description, uint256 _duration, uint256 _yesBasisPoints) payable returns (uint256)",
+        "function placeBet(uint256 _marketId, bool _prediction) payable",
+        "function getPrices(uint256 _marketId) view returns (uint256 yesPrice, uint256 noPrice)",
+        "function getPosition(uint256 _marketId, address _user) view returns (uint256 yesShares, uint256 noShares, uint256 yesCost, uint256 noCost)",
+        "function calculatePotentialPayout(uint256 _marketId, uint256 _amount, bool _isYes) view returns (uint256)",
+        "function claimReward(uint256 _marketId)",
+        "function resolveMarket(uint256 _marketId, uint8 _outcome, bytes32 _txHash)",
+        "function owner() view returns (address)",
+        "function collectedFees() view returns (uint256)",
+        "event MarketCreated(uint256 indexed marketId, string question, uint256 endTime, address indexed creator, uint256 seedFund)",
+        "event BetPlaced(uint256 indexed marketId, address indexed user, bool prediction, uint256 amount, uint256 shares)",
+        "event MarketResolved(uint256 indexed marketId, uint8 outcome, bytes32 txHash)",
+        "event RewardClaimed(uint256 indexed marketId, address indexed user, uint256 amount)"
     ]
 };
 

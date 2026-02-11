@@ -3,7 +3,7 @@ import { getYesPrice, getEstimatedShares } from './MarketLogic';
 
 /**
  * Mocks the interaction with the TruthArena.sol smart contract.
- * In production, this would use `viem` or `wagmi` to write to Mantle Mainnet.
+ * In production, this would use `viem` or `wagmi` to write to HashKey Chain.
  */
 
 // CPMM Price Calculation: P(Yes) = NoPool / (YesPool + NoPool)
@@ -14,7 +14,7 @@ export const calculateProbability = (yesPool: number, noPool: number): number =>
 export const formatCurrency = (val: number) => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: 'USD', // Representing MNT stable value
+    currency: 'USD', // Representing HSK stable value
     maximumFractionDigits: 0,
   }).format(val);
 };
@@ -31,6 +31,6 @@ export const calculatePotentialReturn = (
   const isBuyingYes = direction === Outcome.YES;
   const shares = getEstimatedShares(amount, isBuyingYes, market.yesPool, market.noPool);
   
-  // If we win, each share is worth 1 MNT.
+  // If we win, each share is worth 1 HSK.
   return shares; 
 };

@@ -36,7 +36,7 @@ const MOCK_MARKETS = [
     },
     {
         title: "Target: GPU Cluster Rent-Fi",
-        description: "Verify uptime of 10,000 H100 GPUs tokenized on Mantle. Zero-day rumor: Virtual Machine looping same workload to fake activity.",
+        description: "Verify uptime of 10,000 H100 GPUs tokenized on HashKey Chain. Zero-day rumor: Virtual Machine looping same workload to fake activity.",
         durationDays: 14
     },
     {
@@ -54,8 +54,8 @@ const MOCK_MARKETS = [
 async function main() {
     console.log('🚀 Starting market seeding process...\n');
 
-    // 连接到 Mantle Sepolia
-    const provider = new ethers.JsonRpcProvider('https://rpc.sepolia.mantle.xyz');
+    // 连接到 HashKey Chain Testnet
+    const provider = new ethers.JsonRpcProvider('https://testnet.hsk.xyz');
     
     // 从环境变量获取私钥
     const privateKey = process.env.PRIVATE_KEY;
@@ -68,10 +68,10 @@ async function main() {
 
     // 检查余额
     const balance = await provider.getBalance(wallet.address);
-    console.log('💰 Balance:', ethers.formatEther(balance), 'MNT\n');
+    console.log('💰 Balance:', ethers.formatEther(balance), 'HSK\n');
 
     if (balance === 0n) {
-        throw new Error('❌ Insufficient balance. Please get some MNT from faucet.');
+        throw new Error('❌ Insufficient balance. Please get some HSK from faucet.');
     }
 
     // 连接合约
@@ -136,7 +136,7 @@ async function main() {
         console.log(`     TX: ${m.txHash}`);
     });
 
-    console.log('\n🔗 View on explorer: https://explorer.sepolia.mantle.xyz');
+    console.log('\n🔗 View on explorer: https://testnet-explorer.hsk.xyz');
 }
 
 main()

@@ -1,20 +1,21 @@
 import React, { useState } from 'react';
 import { Sword, Shield, Send } from 'lucide-react';
+import { OnChainChallenge } from '../services/challengeService';
 
 interface Challenge {
-  id: string;
+  id: string | number;
   type: 'red' | 'blue';
   title: string;
   evidence: string;
   timestamp: Date;
-  replyToId?: string; // 回复的目标论点ID
-  replies?: Challenge[]; // 子回复
+  replyToId?: string | number;
+  replies?: Challenge[];
 }
 
 interface RedBlueChallengeProps {
   marketId: number;
-  side: 'red' | 'blue'; // 指定只显示红方或蓝方
-  challenges: Challenge[];
+  side: 'red' | 'blue';
+  challenges: OnChainChallenge[];
   onAddChallenge: (challenge: Challenge) => void;
 }
 
@@ -22,7 +23,7 @@ export const RedBlueChallenge: React.FC<RedBlueChallengeProps> = ({ marketId, si
   const [showForm, setShowForm] = useState(false);
   const [title, setTitle] = useState('');
   const [evidence, setEvidence] = useState('');
-  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [replyingTo, setReplyingTo] = useState<number | null>(null);
 
   const handleSubmit = () => {
     if (!title.trim() || !evidence.trim()) return;
@@ -43,7 +44,7 @@ export const RedBlueChallenge: React.FC<RedBlueChallengeProps> = ({ marketId, si
     setReplyingTo(null);
   };
 
-  const handleReply = (challengeId: string) => {
+  const handleReply = (challengeId: number) => {
     setReplyingTo(challengeId);
     setShowForm(true);
   };
@@ -76,7 +77,7 @@ export const RedBlueChallenge: React.FC<RedBlueChallengeProps> = ({ marketId, si
           </div>
           {replyingTo && (
             <div className="text-[10px] text-yellow-400 mb-2">
-              ↳ Replying to: {challenges.find(c => c.id === replyingTo)?.title}
+              ↳ Replying to: {challenges.find(c => Number(c.id) === replyingTo)?.title}
             </div>
           )}
           
@@ -134,7 +135,7 @@ export const RedBlueChallenge: React.FC<RedBlueChallengeProps> = ({ marketId, si
                     </button>
                   </div>
                   <div className="text-[10px] text-gray-500 font-mono mb-1">
-                    {c.timestamp.toLocaleTimeString('zh-CN')}
+                    {c.author ? `${c.author.slice(0, 6)}...${c.author.slice(-4)} · ` : ''}{c.timestamp.toLocaleTimeString('zh-CN')}
                   </div>
                   <div className="text-[10px] text-gray-400 bg-black/50 p-1 font-mono">
                     {c.evidence.substring(0, 80)}{c.evidence.length > 80 ? '...' : ''}

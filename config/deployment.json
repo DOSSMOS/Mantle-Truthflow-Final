@@ -1,7 +1,7 @@
 {
-  "network": "mantleSepolia",
-  "address": "0x7D3fC81bA00405fa1A08AB83177e7e283Bec3c67",
+  "network": "hashkeyTestnet",
+  "address": "0x71111F3b60E2f62eA306662383FcAfE2DCc8afa9",
   "deployer": "0x569Fe9311d92322c3b755B426D6f8Be9d9F1f2f6",
-  "timestamp": "2026-01-12T18:06:36.554Z",
-  "blockNumber": 33348259
+  "timestamp": "2026-02-11T11:39:40.413Z",
+  "blockNumber": 23811661
 }

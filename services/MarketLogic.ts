@@ -15,7 +15,7 @@ import { Market } from '../types';
  */
 export const getYesPrice = (yesPool: number, noPool: number): number => {
     if (yesPool + noPool === 0) return 0;
-    return noPool / (yesPool + noPool);
+    return yesPool / (yesPool + noPool);
 };
 
 /**
@@ -24,19 +24,19 @@ export const getYesPrice = (yesPool: number, noPool: number): number => {
  */
 export const getNoPrice = (yesPool: number, noPool: number): number => {
     if (yesPool + noPool === 0) return 0;
-    return yesPool / (yesPool + noPool);
+    return noPool / (yesPool + noPool);
 };
 
 /**
  * Estimates the shares received for a trade.
- * @param amountIn MNT input
+ * @param amountIn HSK input
  * @param isBuyingYes Direction
  * @param yesPool Current Yes Reserve
  * @param noPool Current No Reserve
  */
 export const getEstimatedShares = (amountIn: number, isBuyingYes: boolean, yesPool: number, noPool: number) => {
     // Basic CPMM: k = x * y
-    // We assume 1 MNT = 1 YES + 1 NO
+    // We assume 1 HSK = 1 YES + 1 NO
     // We keep the one we want, and swap the other.
     
     // Fee ignored for estimation

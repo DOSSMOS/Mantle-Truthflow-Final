@@ -6,43 +6,44 @@ declare global {
     }
 }
 
-// PolymarketL1 合约 ABI
-const POLYMARKET_ABI = [
+// TruthArenaV2 合约 ABI
+const TRUTHARENA_ABI = [
     "function marketCount() view returns (uint256)",
-    "function markets(uint256) view returns (uint256 id, string question, uint256 yesPool, uint256 noPool, uint256 totalYesShares, uint256 totalNoShares, uint64 closeTime, uint8 status, bool outcome, bytes32 evidenceTxHash, address creator, uint64 createdAt)",
-    "function yesShares(uint256 marketId, address user) view returns (uint256)",
-    "function noShares(uint256 marketId, address user) view returns (uint256)",
-    "function claimed(uint256 marketId, address user) view returns (bool)",
-    "function createMarket(string calldata question, uint64 closeTime) external returns (uint256)",
-    "function quoteCostWei(bool sideYes, uint256 sharesToBuy, uint256 marketId) view returns (uint256)",
-    "function buyYes(uint256 marketId, uint256 sharesToBuy) payable",
-    "function buyNo(uint256 marketId, uint256 sharesToBuy) payable",
-    "function resolveMarket(uint256 marketId, bool outcome, bytes32 evidenceTxHash) external returns (bool)",
-    "function deleteMarket(uint256 marketId) external returns (bool)",
-    "function getPayoutPerShareWei(uint256 marketId) view returns (uint256)",
-    "function claim(uint256 marketId) external returns (uint256)",
-    "event MarketCreated(uint256 indexed marketId, string question, uint64 closeTime)",
-    "event SharesBought(uint256 indexed marketId, address indexed buyer, bool sideYes, uint256 shares, uint256 costWei)",
-    "event MarketResolved(uint256 indexed marketId, bool outcome, bytes32 evidenceTxHash)",
-    "event Claimed(uint256 indexed marketId, address indexed user, uint256 amountWei)",
+    "function getMarket(uint256 _marketId) view returns (string question, string description, uint256 endTime, uint256 yesPool, uint256 noPool, uint256 totalYesShares, uint256 totalNoShares, uint8 status, uint8 outcome, uint256 seedFund)",
+    "function createMarket(string memory _question, string memory _description, uint256 _duration, uint256 _yesBasisPoints) payable returns (uint256)",
+    "function placeBet(uint256 _marketId, bool _prediction) payable",
+    "function getPrices(uint256 _marketId) view returns (uint256 yesPrice, uint256 noPrice)",
+    "function getPosition(uint256 _marketId, address _user) view returns (uint256 yesShares, uint256 noShares, uint256 yesCost, uint256 noCost)",
+    "function calculatePotentialPayout(uint256 _marketId, uint256 _amount, bool _isYes) view returns (uint256)",
+    "function claimReward(uint256 _marketId)",
+    "function resolveMarket(uint256 _marketId, uint8 _outcome, bytes32 _txHash)",
+    "function cancelMarket(uint256 _marketId)",
+    "function claimRefund(uint256 _marketId)",
+    "function owner() view returns (address)",
+    "function collectedFees() view returns (uint256)",
+    "function hasClaimed(uint256, address) view returns (bool)",
+    "event MarketCreated(uint256 indexed marketId, string question, uint256 endTime, address indexed creator, uint256 seedFund)",
+    "event BetPlaced(uint256 indexed marketId, address indexed user, bool prediction, uint256 amount, uint256 shares)",
+    "event MarketResolved(uint256 indexed marketId, uint8 outcome, bytes32 txHash)",
+    "event RewardClaimed(uint256 indexed marketId, address indexed user, uint256 amount)",
     "event MarketCancelled(uint256 indexed marketId)"
 ];
 
-// Mantle Sepolia 网络配置
-const MANTLE_SEPOLIA_CONFIG = {
-    chainId: '0x138B', // 5003
-    chainName: 'Mantle Sepolia',
+// HashKey Chain Testnet 网络配置
+const HASHKEY_TESTNET_CONFIG = {
+    chainId: '0x85', // 133
+    chainName: 'HashKey Chain Testnet',
     nativeCurrency: {
-        name: 'MNT',
-        symbol: 'MNT',
+        name: 'HSK',
+        symbol: 'HSK',
         decimals: 18
     },
-    rpcUrls: ['https://rpc.sepolia.mantle.xyz'],
-    blockExplorerUrls: ['https://explorer.sepolia.mantle.xyz']
+    rpcUrls: ['https://testnet.hsk.xyz'],
+    blockExplorerUrls: ['https://testnet-explorer.hsk.xyz']
 };
 
 /**
- * PolymarketService - 管理预测市场合约交互（Mantle Sepolia）
+ * PolymarketService - 管理预测市场合约交互（HashKey Chain Testnet）
  */
 export class PolymarketService {
     private provider: ethers.BrowserProvider | null = null;
@@ -51,7 +52,7 @@ export class PolymarketService {
     private contractAddress: string;
     private userAddress: string | null = null;
 
-    constructor(contractAddress: string = '0x76fe9c7fA93afF8053FFfBD9995A611B49eb5C6F') {
+    constructor(contractAddress: string = '0x71111F3b60E2f62eA306662383FcAfE2DCc8afa9') {
         this.contractAddress = contractAddress;
     }
 
@@ -73,10 +74,10 @@ export class PolymarketService {
             // 获取 signer
             this.signer = await this.provider.getSigner();
             
-            // 检查并切换到 Mantle Sepolia 网络
+            // 检查并切换到 HashKey Chain Testnet
             const network = await this.provider.getNetwork();
-            if (network.chainId !== BigInt(5003)) {
-                await this.switchToMantleSepolia();
+            if (network.chainId !== BigInt(133)) {
+                await this.switchToHashKeyTestnet();
                 
                 // 网络切换后重新获取 provider 和 signer
                 this.provider = new ethers.BrowserProvider(window.ethereum);
@@ -86,36 +87,37 @@ export class PolymarketService {
             // 创建合约实例
             this.contract = new ethers.Contract(
                 this.contractAddress,
-                POLYMARKET_ABI,
+                TRUTHARENA_ABI,
                 this.signer
             );
 
-            console.log('✅ PolymarketL1 connected:', this.userAddress);
+            console.log('✅ TruthArenaV2 connected:', this.userAddress);
             return { success: true, address: this.userAddress };
 
         } catch (error: any) {
-            console.error('❌ PolymarketL1 connection failed:', error);
+            console.error('❌ TruthArenaV2 connection failed:', error);
             return { success: false, error: error.message };
         }
     }
 
     /**
-     * 切换到 Mantle Sepolia 网络
+     * 切换到 HashKey Chain Testnet
      */
-    async switchToMantleSepolia(): Promise<void> {
+    async switchToHashKeyTestnet(): Promise<void> {
         try {
+            // 先尝试添加/更新网络配置（确保 nativeCurrency 为 HSK）
             await window.ethereum.request({
-                method: 'wallet_switchEthereumChain',
-                params: [{ chainId: MANTLE_SEPOLIA_CONFIG.chainId }],
+                method: 'wallet_addEthereumChain',
+                params: [HASHKEY_TESTNET_CONFIG],
             });
-        } catch (switchError: any) {
-            // 如果网络不存在，添加网络
-            if (switchError.code === 4902) {
+        } catch (addError: any) {
+            // 如果网络已存在，MetaMask 会自动切换，忽略错误
+            try {
                 await window.ethereum.request({
-                    method: 'wallet_addEthereumChain',
-                    params: [MANTLE_SEPOLIA_CONFIG],
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: HASHKEY_TESTNET_CONFIG.chainId }],
                 });
-            } else {
+            } catch (switchError: any) {
                 throw switchError;
             }
         }
@@ -125,8 +127,9 @@ export class PolymarketService {
      * 创建市场
      * @param question 市场问题
      * @param closeTime 关闭时间（Unix 时间戳）
+     * @param seedFundHSK 种子资金（HSK），默认 0.01
      */
-    async createMarket(question: string, closeTime: number): Promise<{ 
+    async createMarket(question: string, closeTime: number, seedFundHSK: string = '0.01', yesBasisPoints: number = 5000): Promise<{ 
         success: boolean; 
         marketId?: number; 
         txHash?: string; 
@@ -141,9 +144,28 @@ export class PolymarketService {
                 return { success: false, error: 'Contract not initialized' };
             }
 
-            console.log(`📝 Creating market: ${question}`);
+            // 计算 duration（从现在到 closeTime 的秒数）
+            const now = Math.floor(Date.now() / 1000);
+            const duration = closeTime - now;
             
-            const tx = await this.contract.createMarket(question, closeTime);
+            if (duration <= 0) {
+                return { success: false, error: 'Close time must be in the future' };
+            }
+
+            // 确保 yesBasisPoints 在有效范围内 (1-9999)
+            const validYesBP = Math.max(1, Math.min(9999, Math.round(yesBasisPoints)));
+
+            console.log(`📝 Creating market: ${question}`);
+            console.log(`   seed fund: ${seedFundHSK} HSK, parsed: ${ethers.parseEther(seedFundHSK).toString()} wei`);
+            console.log(`   duration: ${duration}s, yesBasisPoints: ${validYesBP}`);
+            
+            const tx = await this.contract.createMarket(
+                question,
+                '',  // description
+                duration,
+                validYesBP,
+                { value: ethers.parseEther(seedFundHSK) }
+            );
             const receipt = await tx.wait();
 
             // 从事件中获取 marketId
@@ -184,21 +206,20 @@ export class PolymarketService {
         try {
             if (!this.contract) return null;
 
-            const market = await this.contract.markets(marketId);
+            const market = await this.contract.getMarket(marketId);
 
             return {
-                id: Number(market[0]),
-                question: market[1],
-                yesPool: Number(ethers.formatEther(market[2])),
-                noPool: Number(ethers.formatEther(market[3])),
-                totalYesShares: Number(market[4]),
-                totalNoShares: Number(market[5]),
-                closeTime: Number(market[6]),
+                id: marketId,
+                question: market[0],
+                description: market[1],
+                closeTime: Number(market[2]),
+                yesPool: Number(ethers.formatEther(market[3])),
+                noPool: Number(ethers.formatEther(market[4])),
+                totalYesShares: Number(market[5]),
+                totalNoShares: Number(market[6]),
                 status: Number(market[7]),
-                outcome: market[8],
-                evidenceTxHash: market[9],
-                creator: market[10],
-                createdAt: Number(market[11])
+                outcome: Number(market[8]),
+                seedFund: Number(ethers.formatEther(market[9]))
             };
 
         } catch (error) {
@@ -208,92 +229,63 @@ export class PolymarketService {
     }
 
     /**
-     * 计算购买成本
+     * 下注（购买 YES 或 NO）
      * @param marketId 市场ID
-     * @param sideYes 是否购买YES
-     * @param sharesToBuy 购买份额数
+     * @param prediction true=YES, false=NO
+     * @param amountHSK 下注金额（HSK）
      */
-    async quoteCost(marketId: number, sideYes: boolean, sharesToBuy: number): Promise<number> {
+    async placeBet(marketId: number, prediction: boolean, amountHSK: string): Promise<{ 
+        success: boolean; 
+        txHash?: string; 
+        error?: string 
+    }> {
         try {
-            if (!this.contract) return 0;
+            if (!this.contract) {
+                return { success: false, error: 'Contract not initialized' };
+            }
 
-            const cost = await this.contract.quoteCostWei(sideYes, sharesToBuy, marketId);
-            return Number(ethers.formatEther(cost));
+            console.log(`${prediction ? '📈' : '�'} Placing ${prediction ? 'YES' : 'NO'} bet: ${amountHSK} HSK`);
+            
+            const tx = await this.contract.placeBet(marketId, prediction, { 
+                value: ethers.parseEther(amountHSK) 
+            });
+            const receipt = await tx.wait();
 
-        } catch (error) {
-            console.error('Quote cost failed:', error);
-            return 0;
+            console.log(`✅ Bet placed: TX ${receipt.hash}`);
+
+            return { 
+                success: true, 
+                txHash: receipt.hash 
+            };
+
+        } catch (error: any) {
+            console.error('❌ Place bet failed:', error);
+            return { success: false, error: error.message };
         }
     }
 
     /**
-     * 购买 YES 份额
-     * @param marketId 市场ID
-     * @param sharesToBuy 购买份额数
+     * 购买 YES 份额（兼容旧接口）
      */
     async buyYes(marketId: number, sharesToBuy: number): Promise<{ 
         success: boolean; 
         txHash?: string; 
         error?: string 
     }> {
-        try {
-            if (!this.contract) {
-                return { success: false, error: 'Contract not initialized' };
-            }
-
-            const cost = await this.contract.quoteCostWei(true, sharesToBuy, marketId);
-            
-            console.log(`📈 Buying ${sharesToBuy} YES shares for ${ethers.formatEther(cost)} MNT`);
-            
-            const tx = await this.contract.buyYes(marketId, sharesToBuy, { value: cost });
-            const receipt = await tx.wait();
-
-            console.log(`✅ YES shares bought: TX ${receipt.hash}`);
-
-            return { 
-                success: true, 
-                txHash: receipt.hash 
-            };
-
-        } catch (error: any) {
-            console.error('❌ Buy YES failed:', error);
-            return { success: false, error: error.message };
-        }
+        const amountHSK = (sharesToBuy * 0.001).toString();
+        return this.placeBet(marketId, true, amountHSK);
     }
 
     /**
-     * 购买 NO 份额
-     * @param marketId 市场ID
-     * @param sharesToBuy 购买份额数
+     * 购买 NO 份额（兼容旧接口）
      */
     async buyNo(marketId: number, sharesToBuy: number): Promise<{ 
         success: boolean; 
         txHash?: string; 
         error?: string 
     }> {
-        try {
-            if (!this.contract) {
-                return { success: false, error: 'Contract not initialized' };
-            }
-
-            const cost = await this.contract.quoteCostWei(false, sharesToBuy, marketId);
-            
-            console.log(`📉 Buying ${sharesToBuy} NO shares for ${ethers.formatEther(cost)} MNT`);
-            
-            const tx = await this.contract.buyNo(marketId, sharesToBuy, { value: cost });
-            const receipt = await tx.wait();
-
-            console.log(`✅ NO shares bought: TX ${receipt.hash}`);
-
-            return { 
-                success: true, 
-                txHash: receipt.hash 
-            };
-
-        } catch (error: any) {
-            console.error('❌ Buy NO failed:', error);
-            return { success: false, error: error.message };
-        }
+        const amountHSK = (sharesToBuy * 0.001).toString();
+        return this.placeBet(marketId, false, amountHSK);
     }
 
     /**
@@ -306,35 +298,18 @@ export class PolymarketService {
         noShares: number;
     }> {
         try {
-            console.log('[getUserShares] Starting...', { marketId, userAddress });
-            
             // 如果合约未初始化，创建只读provider
             if (!this.contract) {
-                console.log('[getUserShares] Contract not initialized, creating read-only provider...');
-                const provider = new ethers.JsonRpcProvider('https://rpc.sepolia.mantle.xyz');
-                this.contract = new ethers.Contract(this.contractAddress, POLYMARKET_ABI, provider);
-            }
-            
-            if (!this.contract) {
-                console.error('[getUserShares] Contract still not available');
-                return { yesShares: 0, noShares: 0 };
+                const provider = new ethers.JsonRpcProvider('https://testnet.hsk.xyz');
+                this.contract = new ethers.Contract(this.contractAddress, TRUTHARENA_ABI, provider);
             }
 
-            console.log('[getUserShares] Calling contract.yesShares...');
-            const yesShares = await this.contract.yesShares(marketId, userAddress);
-            console.log('[getUserShares] yesShares result:', yesShares);
-            
-            console.log('[getUserShares] Calling contract.noShares...');
-            const noShares = await this.contract.noShares(marketId, userAddress);
-            console.log('[getUserShares] noShares result:', noShares);
+            const position = await this.contract.getPosition(marketId, userAddress);
 
-            const result = {
-                yesShares: Number(yesShares),
-                noShares: Number(noShares)
+            return {
+                yesShares: Number(ethers.formatEther(position[0])),
+                noShares: Number(ethers.formatEther(position[1]))
             };
-            
-            console.log('[getUserShares] Final result:', result);
-            return result;
 
         } catch (error) {
             console.error('[getUserShares] Error:', error);
@@ -359,14 +334,14 @@ export class PolymarketService {
 
             console.log(`💰 Claiming rewards for market ${marketId}`);
             
-            const tx = await this.contract.claim(marketId);
+            const tx = await this.contract.claimReward(marketId);
             const receipt = await tx.wait();
 
             // 从事件中获取奖励金额
             const event = receipt.logs.find((log: any) => {
                 try {
                     const parsed = this.contract!.interface.parseLog(log);
-                    return parsed?.name === 'Claimed';
+                    return parsed?.name === 'RewardClaimed';
                 } catch {
                     return false;
                 }
@@ -378,7 +353,7 @@ export class PolymarketService {
                 amount = Number(ethers.formatEther(parsed?.args[2]));
             }
 
-            console.log(`✅ Rewards claimed: ${amount} MNT, TX: ${receipt.hash}`);
+            console.log(`✅ Rewards claimed: ${amount} HSK, TX: ${receipt.hash}`);
 
             return { 
                 success: true,
@@ -401,6 +376,7 @@ export class PolymarketService {
 
     /**
      * 解决市场
+     * @param outcome 1=Yes, 2=No
      */
     async resolveMarket(marketId: number, outcome: boolean): Promise<void> {
         try {
@@ -410,12 +386,13 @@ export class PolymarketService {
 
             console.log(`Resolving market ${marketId} with outcome: ${outcome}`);
 
-            // 生成 evidenceTxHash (使用当前时间戳作为占位符)
-            const evidenceTxHash = ethers.keccak256(
+            // outcome: 1=Yes, 2=No
+            const outcomeValue = outcome ? 1 : 2;
+            const txHash = ethers.keccak256(
                 ethers.toUtf8Bytes(`market-${marketId}-${Date.now()}`)
             );
 
-            const tx = await this.contract.resolveMarket(marketId, outcome, evidenceTxHash);
+            const tx = await this.contract.resolveMarket(marketId, outcomeValue, txHash);
             console.log('Transaction sent:', tx.hash);
 
             const receipt = await tx.wait();
@@ -427,39 +404,12 @@ export class PolymarketService {
     }
 
     /**
-     * 领取奖励
+     * 领取奖励（兼容旧接口）
      */
     async claimRewards(marketId: number): Promise<string> {
         try {
-            if (!this.contract || !this.signer) {
-                throw new Error('Contract not initialized. Call connect() first.');
-            }
-
-            console.log(`Claiming rewards for market ${marketId}`);
-
-            const tx = await this.contract.claim(marketId);
-            console.log('Transaction sent:', tx.hash);
-
-            const receipt = await tx.wait();
-            console.log('Rewards claimed! Transaction:', receipt.hash);
-
-            // 从事件中获取奖励金额
-            const claimEvent = receipt.logs.find((log: any) => {
-                try {
-                    const parsed = this.contract!.interface.parseLog(log);
-                    return parsed && parsed.name === 'RewardsClaimed';
-                } catch {
-                    return false;
-                }
-            });
-
-            if (claimEvent) {
-                const parsed = this.contract.interface.parseLog(claimEvent);
-                const amount = ethers.formatEther(parsed!.args.amount);
-                return amount;
-            }
-
-            return '0';
+            const result = await this.claim(marketId);
+            return result.amount?.toString() || '0';
         } catch (error) {
             console.error('Failed to claim rewards:', error);
             throw error;
@@ -467,23 +417,23 @@ export class PolymarketService {
     }
 
     /**
-     * 删除市场（仅管理员，仅当市场没有任何交易时）
+     * 取消市场（仅管理员）
      */
-    async deleteMarket(marketId: number): Promise<void> {
+    async cancelMarket(marketId: number): Promise<void> {
         try {
             if (!this.contract || !this.signer) {
                 throw new Error('Contract not initialized. Call connect() first.');
             }
 
-            console.log(`Deleting market ${marketId}`);
+            console.log(`Cancelling market ${marketId}`);
 
-            const tx = await this.contract.deleteMarket(marketId);
+            const tx = await this.contract.cancelMarket(marketId);
             console.log('Transaction sent:', tx.hash);
 
             const receipt = await tx.wait();
-            console.log('Market deleted! Transaction:', receipt.hash);
+            console.log('Market cancelled! Transaction:', receipt.hash);
         } catch (error) {
-            console.error('Failed to delete market:', error);
+            console.error('Failed to cancel market:', error);
             throw error;
         }
     }

@@ -1,7 +1,7 @@
 import { Market, Outcome } from '../types';
 import { calculateProbability } from '../services/mantleService';
 import { polymarketService } from '../services/polymarketService';
-import { depositContractService } from '../services/depositContractService';
+// deposit 功能已移除（HashKey Chain 上无 DepositManager）
 
 export const useTradingOperations = (
   markets: Market[],
@@ -20,10 +20,11 @@ export const useTradingOperations = (
       if (useBlockchain) {
         addToTicker(`[SYSTEM] Submitting trade to blockchain...`);
         
-        const sharesToBuy = Math.floor(amount);
+        // amount 就是用户输入的 HSK 金额
+        const amountHSK = amount.toString();
         const result = direction === Outcome.YES 
-          ? await polymarketService.buyYes(marketId, sharesToBuy)
-          : await polymarketService.buyNo(marketId, sharesToBuy);
+          ? await polymarketService.placeBet(marketId, true, amountHSK)
+          : await polymarketService.placeBet(marketId, false, amountHSK);
         
         if (result.success) {
           addToTicker(`[SUCCESS] Trade confirmed: ${result.txHash?.slice(0, 20)}...`);
@@ -66,7 +67,7 @@ export const useTradingOperations = (
           });
         });
         
-        addToTicker(`[USER] Bet ${amount} MNT on ${direction} for Market #${marketId}`);
+        addToTicker(`[USER] Bet ${amount} HSK on ${direction} for Market #${marketId}`);
       }
     } catch (error: any) {
       console.error('Trade failed:', error);
@@ -75,61 +76,10 @@ export const useTradingOperations = (
   };
 
   /**
-   * 提取押金（链上）
+   * 提取押金（已移除 - HashKey Chain 上种子资金直接进入市场池）
    */
   const handleWithdrawDeposit = async (marketId: number) => {
-    const market = markets.find(m => m.id === marketId);
-    if (!market || !market.depositId) {
-      alert('No deposit found for this market');
-      return;
-    }
-
-    if (market.depositWithdrawn) {
-      alert('Deposit has already been withdrawn');
-      return;
-    }
-
-    if (!market.resolved) {
-      alert('Market must be resolved before withdrawing deposit');
-      return;
-    }
-
-    const totalAmount = (market.depositAmount || 0) + (market.accumulatedYield || 0);
-    if (confirm(`Withdraw deposit for Market #${marketId}?\n\nYou will receive: ${market.depositAmount} METH + ${market.accumulatedYield?.toFixed(6) || 0} METH interest\nTotal: ${totalAmount.toFixed(6)} METH\n\nThis will switch to Ethereum Sepolia network.`)) {
-      try {
-        addToTicker(`[SYSTEM] Withdrawing deposit for Market #${marketId}...`);
-        
-        const connectResult = await depositContractService.connect();
-        if (!connectResult.success) {
-          throw new Error(connectResult.error || 'Failed to connect to deposit contract');
-        }
-        
-        addToTicker(`[SYSTEM] Connected to Ethereum Sepolia...`);
-        
-        const result = await depositContractService.withdrawDeposit(market.depositId);
-        
-        if (result.success) {
-          setMarkets(prev => prev.map(m => 
-            m.id === marketId 
-              ? { ...m, depositWithdrawn: true }
-              : m
-          ));
-          
-          addToTicker(`[SUCCESS] Deposit withdrawn: ${totalAmount.toFixed(6)} METH`);
-          addToTicker(`[TX] ${result.txHash}`);
-          alert(`Deposit withdrawn successfully!\n\nTotal: ${totalAmount.toFixed(6)} METH\nTX: ${result.txHash?.slice(0, 20)}...`);
-          
-          setTimeout(() => refreshBalance(), 3000);
-        } else {
-          throw new Error(result.error || 'Withdrawal failed');
-        }
-        
-      } catch (error: any) {
-        console.error('Withdraw deposit failed:', error);
-        addToTicker(`[ERROR] Withdraw failed: ${error.message}`);
-        alert(`Failed to withdraw deposit: ${error.message}`);
-      }
-    }
+    alert('Deposit withdrawal is not available. Seed funds are added directly to market liquidity on HashKey Chain.');
   };
 
   return {
