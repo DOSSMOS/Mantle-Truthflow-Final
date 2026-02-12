@@ -9,8 +9,8 @@ const STEPS = [
   {
     title: "WELCOME TO THE ARENA",
     content: "TruthFlow is a decentralized battlefield. Here, Truth is the scarcest asset, and it must be discovered through financial conflict.",
-    icon: <ShieldCheck size={64} className="text-mantle-neon" />,
-    color: "border-mantle-neon"
+    icon: <ShieldCheck size={64} className="text-hsk-neon" />,
+    color: "border-hsk-neon"
   },
   {
     title: "THE VOID (NAVIGATION)",
@@ -24,21 +24,21 @@ const STEPS = [
       <div className="space-y-2">
         <p>Analyze the glowing nodes:</p>
         <ul className="list-disc list-inside text-left pl-4 space-y-1 text-gray-400">
-          <li><span className="text-mantle-neon">GREEN</span> = High probability of Truth.</li>
-          <li><span className="text-mantle-danger">RED</span> = Suspected Fraud.</li>
+          <li><span className="text-hsk-neon">GREEN</span> = High probability of Truth.</li>
+          <li><span className="text-hsk-danger">RED</span> = Suspected Fraud.</li>
           <li><span className="text-white">SIZE</span> = Total Liquidity staked.</li>
         </ul>
       </div>
     ),
-    icon: <Activity size={64} className="text-mantle-danger" />,
-    color: "border-mantle-danger"
+    icon: <Activity size={64} className="text-hsk-danger" />,
+    color: "border-hsk-danger"
   },
   {
     title: "BRAIN MINTING (THE ALPHA)",
     content: (
       <div className="space-y-2">
         <p className="font-bold text-white">How to make 100x Returns:</p>
-        <p>Don't just bet—<span className="text-mantle-neon">PROVE IT</span>. Upload unique evidence (satellite photos, documents).</p>
+        <p>Don't just bet—<span className="text-hsk-neon">PROVE IT</span>. Upload unique evidence (satellite photos, documents).</p>
         <p>The AI Oracle scores your intel. <br/>High Score = <span className="text-green-400 font-bold">95% DISCOUNT</span> on token entry price.</p>
         <p className="text-xs text-gray-500 italic mt-2">"Information is the ultimate leverage."</p>
       </div>
@@ -82,7 +82,7 @@ const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ onComplete }) => {
   return (
     <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md animate-fade-in">
       {/* Cyberpunk Decorative Lines */}
-      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-mantle-neon to-transparent opacity-50"></div>
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-hsk-neon to-transparent opacity-50"></div>
       <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-purple-500 to-transparent opacity-50"></div>
 
       <div className={`relative w-full max-w-lg bg-scifi-bg border-2 ${stepData.color} shadow-[0_0_50px_rgba(0,0,0,0.5)] rounded-lg p-1 overflow-hidden transition-colors duration-500`}>
@@ -133,7 +133,7 @@ const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ onComplete }) => {
 
             <button 
               onClick={handleNext}
-              className="bg-white text-black hover:bg-mantle-neon transition-colors font-bold py-2 px-6 rounded flex items-center gap-2 uppercase tracking-widest shadow-[0_0_20px_rgba(255,255,255,0.2)]"
+              className="bg-white text-black hover:bg-hsk-neon transition-colors font-bold py-2 px-6 rounded flex items-center gap-2 uppercase tracking-widest shadow-[0_0_20px_rgba(255,255,255,0.2)]"
             >
               {currentStep === STEPS.length - 1 ? 'Enter Void' : 'Next'}
               {currentStep !== STEPS.length - 1 && <ChevronRight size={16} />}

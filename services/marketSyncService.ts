@@ -1,6 +1,6 @@
 import { polymarketService } from './polymarketService';
 import { Market } from '../types';
-import { calculateProbability } from './mantleService';
+import { calculateProbability } from './hashkeyService';
 
 /**
  * MarketSyncService - 从区块链同步市场数据

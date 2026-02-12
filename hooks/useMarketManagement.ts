@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Market } from '../types';
-import { calculateProbability } from '../services/mantleService';
+import { calculateProbability } from '../services/hashkeyService';
 import { polymarketService } from '../services/polymarketService';
 // deposit 功能已移除，种子资金通过 createMarket 的 msg.value 直接发送
 

@@ -31,7 +31,7 @@ cp .env.example .env
 
 编辑 `.env` 文件，填入：
 - `PRIVATE_KEY`: 你的钱包私钥
-- `MANTLE_RPC_URL`: Mantle RPC 地址（默认已配置）
+- `HASHKEY_RPC_URL`: HashKey Chain RPC 地址（默认已配置）
 
 ### 3. 编译合约
 ```bash

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Market, Outcome, Syndicate } from '../types';
-import { calculateProbability, formatCurrency, simulateTxDelay } from '../services/mantleService';
+import { calculateProbability, formatCurrency, simulateTxDelay } from '../services/hashkeyService';
 import { yieldService } from '../services/yieldService';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { X, Shield, Skull, Zap, Lock, Eye, Target, Users, Server, Share2, AlertTriangle, Bug, TrendingUp } from 'lucide-react';

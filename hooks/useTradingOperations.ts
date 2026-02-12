@@ -1,5 +1,5 @@
 import { Market, Outcome } from '../types';
-import { calculateProbability } from '../services/mantleService';
+import { calculateProbability } from '../services/hashkeyService';
 import { polymarketService } from '../services/polymarketService';
 // deposit 功能已移除（HashKey Chain 上无 DepositManager）
 

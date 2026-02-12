@@ -1,8 +1,8 @@
-# Mantle RWA TruthFlow
+# HashKey RWA TruthFlow
 
-**Decentralized Prediction Market for RWA Authenticity Verification**
+**Decentralized Cybersecurity Prediction Market & Red-Blue Challenge Platform**
 
-TruthFlow is a decentralized prediction market platform built on Mantle Network, combining AI-powered analysis and blockchain technology to verify the authenticity of Real World Assets (RWA).
+TruthFlow is a decentralized prediction market platform built on HashKey Chain, combining AI-powered analysis and blockchain technology to verify the authenticity of Real World Assets (RWA) through a cybersecurity red-blue teaming approach.
 
 ## 🌟 Core Features
 
@@ -15,14 +15,17 @@ TruthFlow is a decentralized prediction market platform built on Mantle Network,
 - **Dynamic Odds Generation**: Automatically calculate initial market odds based on AI analysis results
 
 ### 2. Prediction Market Mechanism
-- **Decentralized Trading**: Smart contract-based trading on Mantle Sepolia Network
-- **Automated Market Maker (AMM)**: Dynamic pricing using LMSR algorithm
+- **Decentralized Trading**: Smart contract-based trading on HashKey Chain Testnet
+- **Proportional Pool Model**: Security Score = yesPool / (yesPool + noPool)
 - **Real-Time Probability Updates**: Market prices reflect collective intelligence
 - **Fair Settlement**: On-chain verification with automatic reward distribution
 
-### 3. Dual-Chain Architecture
-- **Mantle Sepolia**: Prediction market trading (using MNT)
-- **Ethereum Sepolia**: Deposit management and yield generation (using ETH)
+### 3. Red-Blue Challenge System (On-Chain)
+- **Red Team (Attack)**: Submit vulnerability evidence, exploit PoCs, risk reports
+- **Blue Team (Defense)**: Submit defense evidence, mitigation strategies, audit reports
+- **On-Chain Storage**: All challenges permanently stored on ChallengeArena contract
+- **File Attachments**: Attach .md, .txt, .json, .sol files as evidence
+- **Detail View**: Click any challenge to expand full details
 
 ## 🚀 Quick Start
 
@@ -42,120 +45,128 @@ Access at: http://localhost:3000
 npm run build
 ```
 
+### Smart Contract Deployment
+```bash
+cd contracts
+npm install
+cp .env.example .env  # Fill in PRIVATE_KEY
+npx hardhat compile
+npx hardhat run deploy.js --network hashkeyTestnet
+```
+
 ## 📖 User Guide
 
-### Creating a Market
-1. Click the "CREATE NEW MARKET" button
+### Creating a Target
+1. Click the "NEW TARGET" button
 2. Choose your method:
-   - **Manual Entry**: Input title, description, and initial liquidity pools
-   - **AI Analysis**: Upload an MD document for AI-generated market parameters
-3. Set deposit amount (optional)
-4. Confirm creation and wait for on-chain confirmation
+   - **Manual Entry**: Input title, description, companies, persons
+   - **Upload MD**: Upload an MD document for AI-generated market parameters
+3. AI analyzes the input (~10 minutes) and generates risk probability
+4. Seed fund deposited via MetaMask (default 0.001 HSK)
+5. Market created on-chain with AI-calculated odds
 
-### Trading Operations
-1. Select a market to view details
+### Trading (Betting)
+1. Select a target to view details
 2. Choose your position: DEFEND (YES) or ATTACK (NO)
-3. Enter trade amount
-4. Confirm transaction via MetaMask signature
-5. Wait for transaction confirmation
+3. Enter HSK amount to bet
+4. Confirm transaction via MetaMask
+5. Security Score updates in real-time
+
+### Red-Blue Challenge
+1. Open a target's detail panel
+2. Switch to RED TEAM or BLUE TEAM tab
+3. Submit challenge/defense with title and evidence
+4. Optionally attach files (.md, .sol, .json, etc.)
+5. Click any entry to view full details
+6. Reply to existing challenges
 
 ### Market Settlement
-1. Market expires or admin manually resolves
+1. Market expires or admin resolves
 2. Final outcome determined (YES or NO)
-3. Winners can claim rewards
-4. Click "CLAIM REWARDS" to collect earnings
+3. Winners claim rewards via "CLAIM REWARDS"
 
 ## 🛠️ Tech Stack
 
-- **Frontend Framework**: React + TypeScript + Vite
-- **Blockchain Integration**: ethers.js v6
-- **Smart Contracts**: Solidity (Mantle Sepolia)
-- **AI Analysis**: Tencent Yuanqi AI Agent
+- **Frontend**: React + TypeScript + Vite
+- **Blockchain**: ethers.js v6 + HashKey Chain
+- **Smart Contracts**: Solidity 0.8.20 (Hardhat)
+- **AI Analysis**: Railway-hosted AI backend
 - **Styling**: Tailwind CSS + Lucide Icons
 - **3D Visualization**: React Three Fiber
 
 ## 📁 Project Structure
 
 ```
-cybersecurity-copy-of-mantle-truthflow/
+hashkey-rwa-truthflow/
 ├── components/          # React components
 │   ├── AddMarketPanel.tsx      # Market creation panel
 │   ├── MarketTerminal.tsx      # Trading terminal
+│   ├── RedBlueChallenge.tsx    # Red-Blue challenge UI
+│   ├── TabContent.tsx          # Tab content with on-chain challenges
 │   ├── Dashboard.tsx           # Dashboard
-│   └── ...
+│   ├── TruthUniverse.tsx       # 3D universe visualization
+│   └── TutorialOverlay.tsx     # Tutorial overlay
 ├── services/           # Service layer
 │   ├── polymarketService.ts    # Prediction market contract interactions
-│   ├── paymentService.ts       # Payment services
+│   ├── challengeService.ts     # On-chain challenge read/write
+│   ├── hashkeyService.ts       # Price calculation & utilities
 │   ├── aiAnalysisService.ts    # AI analysis services
-│   └── ...
+│   ├── contractDataService.ts  # Contract data reader
+│   └── marketSyncService.ts    # Blockchain market sync
 ├── hooks/              # React Hooks
 │   ├── useMarketManagement.ts  # Market management
 │   └── useTradingOperations.ts # Trading operations
 ├── config/             # Configuration files
-│   ├── contractConfig.ts       # Contract configuration
-│   └── systemWallet.ts         # System wallet configuration
+│   ├── contractConfig.ts       # TruthArenaV2 contract config
+│   └── challengeConfig.ts      # ChallengeArena contract config
 ├── contracts/          # Smart contracts
-└── dist/              # Build output
+│   ├── contracts/
+│   │   ├── TruthArenaV2.sol    # Prediction market contract
+│   │   └── ChallengeArena.sol  # Red-Blue challenge contract
+│   ├── deploy.js               # TruthArenaV2 deploy script
+│   └── deploy-challenge.js     # ChallengeArena deploy script
+└── sample-events/      # Sample MD event files for testing
 ```
 
 ## 🔗 Smart Contract Architecture
 
-The project employs a **dual-chain, three-contract architecture** to separate prediction markets from asset management:
+### 1. TruthArenaV2 Contract (HashKey Chain Testnet)
+**Address**: `0x71111F3b60E2f62eA306662383FcAfE2DCc8afa9`
 
-### 1. PolymarketL1 Contract (Mantle Sepolia)
-**Address**: `0x76fe9c7fA93afF8053FFfBD9995A611B49eb5C6F`
-
-**Core Functions**:
-- **Market Creation**: Create prediction markets with questions and closing times
-- **Automated Market Maker (AMM)**: Dynamic pricing using LMSR algorithm
-- **Share Trading**: Buy/sell YES/NO shares
-- **Market Resolution**: Admin resolves markets and determines final outcomes
-- **Reward Distribution**: Winners claim rewards
+**Features**:
+- Anyone can create markets (no permission restriction)
+- Seed fund split by AI-calculated odds (`_yesBasisPoints`)
+- Security Score = yesPool / (yesPool + noPool)
+- DEFEND bet increases Security Score, ATTACK bet decreases it
 
 **Key Functions**:
-- `createMarket(question, closeTime)` - Create a new market
-- `buyYes(marketId, shares)` - Purchase YES shares
-- `buyNo(marketId, shares)` - Purchase NO shares
-- `resolveMarket(marketId, outcome)` - Resolve market outcome
+- `createMarket(question, description, duration, yesBasisPoints)` - Create market with AI odds
+- `buyYes(marketId)` - Bet on DEFEND (increases Security Score)
+- `buyNo(marketId)` - Bet on ATTACK (decreases Security Score)
+- `resolveMarket(marketId, outcome)` - Resolve market
 - `claim(marketId)` - Claim rewards
 
-### 2. DepositManager Contract (Ethereum Sepolia)
-**Address**: `0xD9eB252A74057965600025023da1bDC51dE3d158`
-
-**Core Functions**:
-- **Deposit Management**: Accept user ETH deposits
-- **Yield Generation**: Simulate DeFi yields (Aave/Compound)
-- **Deposit Withdrawal**: Withdraw deposits and yields after market settlement
-
-**Key Functions**:
-- `createDeposit(marketId)` - Create a deposit
-- `withdrawDeposit(depositId)` - Withdraw deposit and yields
-- `getDepositInfo(depositId)` - Query deposit information
-
-### 3. TransformationRegistry Contract (Mantle Sepolia)
+### 2. ChallengeArena Contract (HashKey Chain Testnet)
 **Address**: `0x22aC931d73351a33CeD412155999cd4945984184`
 
-**Core Functions**:
-- **Asset Transformation Records**: Record RWA asset transformation history
-- **Provenance Verification**: Provide asset origin and transformation path queries
-- **Transparency Guarantee**: All transformation records on-chain and immutable
+**Features**:
+- On-chain storage for Red-Blue challenge data
+- Users pay gas for submissions
+- Supports replies (threaded conversations)
+- Permanent, immutable challenge records
 
 **Key Functions**:
-- `recordTransformation(assetId, fromState, toState)` - Record transformation
-- `getTransformationHistory(assetId)` - Query history
-- `verifyTransformation(assetId, transformationId)` - Verify transformation
+- `submitChallenge(marketId, challengeType, title, evidence, replyToId)` - Submit challenge
+- `getMarketChallengeCount(marketId)` - Get challenge count
+- `getMarketChallengeIds(marketId)` - Get all challenge IDs
+- `getChallenge(challengeId)` - Get challenge details
 
 ### Network Information
 
-**Mantle Sepolia**
-- **RPC URL**: https://rpc.sepolia.mantle.xyz
-- **Block Explorer**: https://explorer.sepolia.mantle.xyz
-- **Chain ID**: 5003
-
-**Ethereum Sepolia**
-- **RPC URL**: https://rpc.sepolia.org
-- **Block Explorer**: https://sepolia.etherscan.io
-- **Chain ID**: 11155111
+**HashKey Chain Testnet**
+- **RPC URL**: https://testnet.hsk.xyz
+- **Chain ID**: 133
+- **Native Token**: HSK
 
 ## 🤖 AI Analysis Integration
 
@@ -164,13 +175,15 @@ The platform integrates AI-powered analysis for automated risk assessment:
 - Sanctions list screening
 - LEI (Legal Entity Identifier) verification
 - Risk scoring and dynamic odds generation
+- AI backend hosted on Railway (`https://ai-production-1bbe.up.railway.app`)
 
 ## 🔐 Security Notes
 
 - All transactions require MetaMask signature confirmation
-- Smart contracts deployed on testnets
-- Deposits and rewards managed through on-chain contracts
-- Private keys and sensitive information should never be hardcoded
+- Smart contracts deployed on HashKey Chain Testnet
+- Red-Blue challenge data permanently stored on-chain
+- Private keys stored in `contracts/.env` (gitignored)
+- No environment variables needed for frontend
 
 ## 📄 License
 
@@ -179,4 +192,3 @@ MIT License
 ---
 
 *"In an era of deepfakes and supply chain opacity, truth is the scarcest asset."*
-![alt text](image.png)

@@ -6,7 +6,7 @@ import AddMarketPanel from './components/AddMarketPanel';
 import { MOCK_MARKETS, AI_AGENTS } from './constants';
 import { Market, Outcome } from './types';
 import { AIGladiator } from './lib/ai-gladiators';
-import { calculateProbability } from './services/mantleService';
+import { calculateProbability } from './services/hashkeyService';
 import { useMarketManagement } from './hooks/useMarketManagement';
 import { useTradingOperations } from './hooks/useTradingOperations';
 import { marketSyncService } from './services/marketSyncService';
@@ -272,7 +272,7 @@ const App: React.FC = () => {
 
       <div className="absolute top-0 left-0 w-full p-4 z-20 flex justify-between items-center pointer-events-none">
         <div className="flex flex-col">
-          <h1 className="text-2xl font-mono font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-mantle-accent tracking-tighter flex items-center gap-2">
+          <h1 className="text-2xl font-mono font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-hsk-accent tracking-tighter flex items-center gap-2">
             <ShieldAlert size={24} className="text-red-500"/> HASHKEY CYBER-WARFARE
           </h1>
           <p className="text-gray-500 text-[10px] font-mono tracking-[0.3em] ml-8">

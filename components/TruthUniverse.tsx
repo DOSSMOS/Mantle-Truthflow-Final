@@ -3,7 +3,7 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Stars, Text, Trail, Line, Billboard } from '@react-three/drei';
 import * as THREE from 'three';
 import { Market } from '../types';
-import { calculateProbability } from '../services/mantleService';
+import { calculateProbability } from '../services/hashkeyService';
 
 interface StarNodeProps {
   market: Market;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Market } from '../types';
-import { calculateProbability, formatCurrency } from '../services/mantleService';
+import { calculateProbability, formatCurrency } from '../services/hashkeyService';
 import { Activity, Radio, Crosshair, Radar } from 'lucide-react';
 
 interface DashboardProps {
