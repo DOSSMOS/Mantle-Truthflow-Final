@@ -197,17 +197,18 @@ const AddMarketPanel: React.FC<AddMarketPanelProps> = ({ onAddMarket, onClose, o
       let pools = { yesPool: formData.yesPool, noPool: formData.noPool };
       let finalFormData = { ...formData };
       
-      // 如果是上传模式且还没有AI分析结果，现在调用AI
-      if (isUploadMode && mdContent && !aiResult) {
-        // 调用AI API分析MD文件
+      if (aiResult && aiResult.adjusted_probability) {
+        // 如果已有AI分析结果，直接使用
+        pools = aiAnalysisService.calculateInitialPools(
+          aiResult.adjusted_probability,
+          formData.totalLiquidity
+        );
+      } else if (isUploadMode && mdContent) {
+        // 上传模式：用 MD 内容调用 AI
         const response = await fetch('https://ai-production-1bbe.up.railway.app/api/analyze', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            md_content: mdContent
-          })
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ md_content: mdContent })
         });
 
         if (!response.ok) {
@@ -219,7 +220,6 @@ const AddMarketPanel: React.FC<AddMarketPanelProps> = ({ onAddMarket, onClose, o
         const result = await response.json();
         setAiResult(result);
         
-        // 使用AI分析结果
         if (result.adjusted_probability) {
           pools = aiAnalysisService.calculateInitialPools(
             result.adjusted_probability,
@@ -227,18 +227,28 @@ const AddMarketPanel: React.FC<AddMarketPanelProps> = ({ onAddMarket, onClose, o
           );
         }
         
-        // 更新表单数据
         finalFormData = {
           ...formData,
           title: result.event_title || formData.title,
           description: result.input?.detailed_info || formData.description
         };
-      } else if (aiResult && aiResult.adjusted_probability) {
-        // 如果已有AI分析结果，直接使用
-        pools = aiAnalysisService.calculateInitialPools(
-          aiResult.adjusted_probability,
-          formData.totalLiquidity
-        );
+      } else {
+        // 手动填写模式：用 description + companies + persons 调用 AI
+        const result = await aiAnalysisService.analyzeEvent({
+          question: formData.description,
+          companies,
+          persons
+        });
+
+        if (result.success && result.data) {
+          setAiResult(result.data);
+          pools = aiAnalysisService.calculateInitialPools(
+            result.data.adjusted_probability,
+            formData.totalLiquidity
+          );
+        } else {
+          throw new Error('AI分析失败: ' + (result.error || 'Unknown error'));
+        }
       }
 
       const depositAmount = formData.depositAmount || 0.001;
@@ -593,7 +603,7 @@ const AddMarketPanel: React.FC<AddMarketPanelProps> = ({ onAddMarket, onClose, o
                 {isAnalyzing ? (
                   <>
                     <Loader2 size={20} className="animate-spin" />
-                    CREATING...
+                    AI ANALYZING... THIS MAY TAKE ~10 MINUTES
                   </>
                 ) : (
                   <>
